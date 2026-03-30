@@ -1,0 +1,5 @@
+node_modules/
+.env
+backend/config/serviceAccountKey.json
+package-lock.json
+dist

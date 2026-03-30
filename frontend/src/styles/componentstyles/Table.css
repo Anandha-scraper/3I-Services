@@ -1,0 +1,259 @@
+/* Reusable Table Component Styles */
+/* Version 3.0 - Enhanced with Template Mode for SandLab */
+
+/* Table Container */
+.reusable-table-container {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+  
+  .reusable-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    font-size: 0.9375rem;
+  }
+  
+  /* Table Header - Default Simple Background */
+  .reusable-table thead tr {
+    background: #f1f5f9;
+  }
+  
+  /* Table Header - Optional Gradient (use .table-gradient-header class) */
+  .reusable-table.table-gradient-header thead tr {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+  
+  .reusable-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #334155;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9375rem;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    vertical-align: middle;
+  }
+  
+  .reusable-table th:last-child {
+    border-right: none;
+  }
+  
+  /* Table Body */
+  .reusable-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    background-color: white;
+    transition: background-color 0.2s ease;
+  }
+  
+  .reusable-table tbody tr:hover {
+    background-color: #f8fafc;
+  }
+  
+  /* Optional Striped Rows (use .table-striped class) */
+  .reusable-table.table-striped tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+  }
+  
+  .reusable-table.table-striped tbody tr:nth-child(even):hover {
+    background-color: #f1f5f9;
+  }
+  
+  .reusable-table td {
+    padding: 0.75rem 1rem;
+    color: #475569;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-right: 1px solid #e2e8f0;
+  }
+  
+  .reusable-table td:last-child {
+    border-right: none;
+  }
+  
+  /* No Records */
+  .reusable-table-no-records {
+    padding: 3rem;
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.9375rem;
+  }
+  
+  /* Actions Column */
+  .action-buttons-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  /* ============================================ */
+  /* Template Mode Styles - For SandLab & Forms */
+  /* ============================================ */
+  
+  /* Template Mode Base */
+  .reusable-table.table-template {
+    table-layout: auto;
+  }
+  
+  .reusable-table.table-template th {
+    text-align: center;
+    white-space: normal;
+    word-wrap: break-word;
+  }
+  
+  .reusable-table.table-template td {
+    text-align: center;
+    min-height: 42px;
+  }
+  
+  /* Template mode - empty cells show placeholder */
+  .reusable-table.table-template td:empty::after {
+    content: '';
+    display: block;
+    min-height: 24px;
+  }
+  
+  /* Bordered Mode - All borders visible */
+  .reusable-table.table-bordered th,
+  .reusable-table.table-bordered td {
+    border: 1px solid #e2e8f0;
+  }
+  
+  .reusable-table.table-bordered th:last-child,
+  .reusable-table.table-bordered td:last-child {
+    border-right: 1px solid #e2e8f0;
+  }
+  
+  /* Compact Mode */
+  .reusable-table.table-compact th,
+  .reusable-table.table-compact td {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* Template Input Styles */
+  .reusable-table.table-template input {
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: #1e293b;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+  
+  .reusable-table.table-template input:focus {
+    outline: none;
+    border-color: #5B9AA9;
+    box-shadow: 0 0 0 3px rgba(91, 154, 169, 0.1);
+  }
+  
+  .reusable-table.table-template input::placeholder {
+    color: #94a3b8;
+  }
+  
+  .reusable-table.table-template input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  
+  .reusable-table.table-template input[type="number"]::-webkit-outer-spin-button,
+  .reusable-table.table-template input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  /* Template Select Styles */
+  .reusable-table.table-template select {
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: #1e293b;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .reusable-table.table-template select:focus {
+    outline: none;
+    border-color: #5B9AA9;
+    box-shadow: 0 0 0 3px rgba(91, 154, 169, 0.1);
+  }
+  
+  /* Label Cell Style - First column as label */
+  .reusable-table.table-template td:first-child {
+    font-weight: 600;
+    color: #475569;
+    background-color: #f8fafc;
+    text-align: left;
+  }
+  
+  /* Header-less template styling */
+  .reusable-table.table-template tbody tr:first-child td {
+    border-top: none;
+  }
+  
+  /* Disabled/Readonly Input Styles */
+  .reusable-table.table-template input:disabled,
+  .reusable-table.table-template input[readonly] {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    color: #64748b;
+  }
+  
+  .reusable-table.table-template select:disabled {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    color: #64748b;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .reusable-table {
+      font-size: 0.8125rem;
+    }
+  
+    .reusable-table th,
+    .reusable-table td {
+      padding: 0.75rem 0.5rem;
+    }
+  
+    .reusable-table.table-template input,
+    .reusable-table.table-template select {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.8125rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .reusable-table {
+      min-width: 800px;
+    }
+  
+    .reusable-table.table-compact th,
+    .reusable-table.table-compact td {
+      padding: 0.375rem 0.5rem;
+    }
+  }

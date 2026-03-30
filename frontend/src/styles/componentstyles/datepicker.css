@@ -1,0 +1,417 @@
+/* HeroUI DatePicker Component Styles */
+.form-group {
+  width: 100%;
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.form-input-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.form-group:focus-within .form-input-icon {
+  color: #2563eb;
+}
+
+/* HeroUI DatePicker Root Styling */
+.heroui-datepicker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* DateField Group (Input Container) */
+.date-field-group {
+  position: relative;
+  width: 100%;
+  height: 56px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background-color: #fafafa;
+  padding: 0 1.5rem 0 3.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.date-field-group:hover {
+  border-color: #d1d5db;
+}
+
+.date-field-group[data-focused="true"],
+.date-field-group:focus-within {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+.date-field-group[data-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+}
+
+/* DateField Input (Segments Container) */
+.date-field-input {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+/* Date Segments */
+.date-segment {
+  padding: 0.25rem 0.125rem;
+  border-radius: 4px;
+  outline: none;
+  font-size: 1.1rem;
+  color: #1f2937;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.date-segment[data-placeholder] {
+  color: #9ca3af;
+}
+
+.date-segment:focus,
+.date-segment[data-focused="true"] {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.date-segment[data-type="literal"] {
+  color: #6b7280;
+}
+
+/* Trigger Button */
+.date-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  outline: none;
+}
+
+.date-picker-trigger:hover {
+  color: #2563eb;
+}
+
+.date-picker-trigger:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.date-picker-trigger[data-pressed="true"] {
+  color: #1d4ed8;
+}
+
+/* Trigger Icon */
+.date-picker-icon {
+  width: 20px;
+  height: 20px;
+  color: inherit;
+}
+
+/* Popover */
+.date-picker-popover {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  z-index: 50;
+  max-width: 320px;
+}
+
+/* Calendar Styling */
+.date-calendar {
+  width: 100%;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.year-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  background: transparent;
+  border: none;
+}
+
+.year-picker-trigger:hover {
+  background-color: #f3f4f6;
+}
+
+.year-picker-trigger:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Calendar Navigation Buttons */
+.calendar-header button[slot="previous"],
+.calendar-header button[slot="next"] {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-header button[slot="previous"]:hover,
+.calendar-header button[slot="next"]:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.calendar-header button[slot="previous"]:focus-visible,
+.calendar-header button[slot="next"]:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+  width: 100%;
+}
+
+/* Calendar Header Cells (Day names) */
+.date-calendar thead th {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+/* Calendar Cells */
+.date-calendar button[role="gridcell"] {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #374151;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.date-calendar button[role="gridcell"]:hover:not([data-disabled="true"]) {
+  background-color: #f3f4f6;
+}
+
+.date-calendar button[role="gridcell"]:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.date-calendar button[role="gridcell"][data-selected="true"] {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.date-calendar button[role="gridcell"][data-today="true"]:not([data-selected="true"]) {
+  border: 2px solid #2563eb;
+}
+
+.date-calendar button[role="gridcell"][data-disabled="true"] {
+  color: #d1d5db;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.date-calendar button[role="gridcell"][data-outside-month="true"] {
+  color: #9ca3af;
+  opacity: 0.5;
+}
+
+/* Year Picker Styles (if using year selection) */
+.date-calendar [role="dialog"] {
+  padding: 1rem;
+}
+
+/* Year Picker Styles */
+.year-picker {
+  padding: 0.5rem;
+}
+
+.year-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.year-nav-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.year-nav-btn:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.year-range-label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.year-cell {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.year-cell:hover {
+  background-color: #f3f4f6;
+}
+
+.year-cell.selected {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Month Picker Styles */
+.month-picker {
+  padding: 0.5rem;
+}
+
+.month-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.month-nav-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-nav-btn:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.month-year-label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.month-cell {
+  padding: 0.75rem 0.5rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-weight: 500;
+}
+
+.month-cell:hover {
+  background-color: #f3f4f6;
+}
+
+.month-cell.selected {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .date-picker-popover {
+    max-width: 100%;
+  }
+
+  .date-calendar button[role="gridcell"] {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+}

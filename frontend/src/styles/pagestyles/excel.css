@@ -1,0 +1,261 @@
+/* Landing cards (Excel page) */
+
+.portal-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 3rem;
+  width: 100%;
+  max-width: calc(3 * 420px + 2 * 3rem);
+  margin: 0 auto 2rem;
+  box-sizing: border-box;
+}
+
+.portal-card {
+  --portal-card-size: 420px;
+  flex: 0 0 var(--portal-card-size);
+  width: var(--portal-card-size);
+  max-width: min(var(--portal-card-size), 100%);
+  aspect-ratio: 1;
+  height: auto;
+  min-width: 0;
+  padding: 2.5rem;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #ffffff 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 10px 15px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.portal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.portal-card:hover {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 30%, #ffffff 100%);
+  border-color: #3b82f6;
+  box-shadow:
+    0 8px 25px rgba(59, 130, 246, 0.15),
+    0 16px 35px rgba(59, 130, 246, 0.1),
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 0 60px rgba(59, 130, 246, 0.05) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transform: translateY(-12px) scale(1.03);
+}
+
+.portal-card:active {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow:
+    0 4px 15px rgba(59, 130, 246, 0.2),
+    0 8px 20px rgba(59, 130, 246, 0.15),
+    0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.portal-card:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 6px;
+}
+
+.portal-card.active {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #f0f9ff 100%);
+  border-color: #2563eb;
+  box-shadow:
+    0 8px 25px rgba(37, 99, 235, 0.25),
+    0 16px 35px rgba(37, 99, 235, 0.15),
+    0 0 0 3px rgba(37, 99, 235, 0.15),
+    0 0 80px rgba(37, 99, 235, 0.08) inset;
+  transform: translateY(-12px) scale(1.03);
+}
+
+.portal-card-icon {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffffff 0%, #eef2f7 100%);
+  border-radius: 1.5rem;
+  color: #64748b;
+  flex-shrink: 0;
+  box-shadow:
+    0 4px 12px rgba(100, 116, 139, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  margin-bottom: 1.5rem;
+}
+
+.portal-card:not(:hover) .portal-card-icon svg {
+  filter: brightness(1.03);
+}
+
+.portal-card:hover .portal-card-icon {
+  background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 50%, #bfdbfe 100%);
+  color: #2563eb;
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, 0.2),
+    0 16px 32px rgba(37, 99, 235, 0.15),
+    0 0 0 1px rgba(37, 99, 235, 0.1) inset,
+    0 0 40px rgba(37, 99, 235, 0.08) inset;
+  transform: scale(1.08);
+}
+
+.portal-card:hover .portal-card-icon svg {
+  filter: none;
+}
+
+.portal-card-title {
+  margin: 0 0 0.75rem 0;
+  width: 100%;
+  max-width: 17rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+  text-align: center;
+  line-height: 1.25;
+  flex-shrink: 0;
+}
+
+.portal-card-desc {
+  margin: 0;
+  width: 100%;
+  max-width: 17rem;
+  font-size: 1.125rem;
+  color: #64748b;
+  line-height: 1.5;
+  text-align: center;
+  flex-shrink: 1;
+  min-height: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .portal-cards-grid {
+    gap: 2.5rem;
+    max-width: calc(2 * 380px + 2.5rem);
+  }
+
+  .portal-card {
+    --portal-card-size: 380px;
+    padding: 2rem;
+  }
+
+  .portal-card-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .portal-card-title {
+    font-size: 1.35rem;
+  }
+
+  .portal-card-desc {
+    font-size: 1rem;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-cards-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 420px;
+  }
+
+  .portal-card {
+    --portal-card-size: 420px;
+    flex: 0 1 auto;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: auto;
+    min-height: 300px;
+    height: auto;
+  }
+
+  .portal-card-icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .portal-card-title {
+    font-size: 1.25rem;
+  }
+
+  .portal-card-desc {
+    font-size: 0.95rem;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+  }
+}
+
+.portal-card-1 {
+  --card-accent: #0f7178;
+}
+
+.portal-card-1:hover .portal-card-icon {
+  background: linear-gradient(135deg, #bbf7d0 0%, #a3e635 100%);
+}
+
+.portal-card-2 {
+  --card-accent: #f59e0b;
+}
+
+.portal-card-2:hover .portal-card-icon {
+  background: linear-gradient(135deg, #bbf7d0 0%, #a3e635 100%);
+}
+
+.portal-card-3 {
+  --card-accent: #7c3aed;
+}
+
+.portal-card-3:hover .portal-card-icon {
+  background: linear-gradient(135deg, #bbf7d0 0%, #a3e635 100%);
+}
+
+.excel-page {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  box-sizing: border-box;
+}
+
+.excel-page .portal-cards-grid {
+  max-width: calc(2 * 420px + 3rem);
+}
+
+@media (max-width: 1024px) {
+  .excel-page .portal-cards-grid {
+    max-width: calc(2 * 380px + 2.5rem);
+  }
+}
