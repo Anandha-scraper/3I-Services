@@ -58,18 +58,17 @@
 
 @media (max-width: 767px) {
   .sidebar {
-    width: var(--sidebar-collapsed-width);
-    transform: translateX(0); /* always show icons */
+    width: 256px;
+    transform: translateX(-100%);
   }
 
   .sidebar.mobile-visible {
-    width: 50vw; /* expand up to 50% */
-    max-width: 256px;
+    transform: translateX(0);
   }
 
-  .sidebar.mobile-visible .sidebar__nav-label,
-  .sidebar.mobile-visible .sidebar__logo-text,
-  .sidebar.mobile-visible .sidebar__logout-text {
+  .sidebar .sidebar__nav-label,
+  .sidebar .sidebar__logo-text,
+  .sidebar .sidebar__logout-text {
     opacity: 1;
     visibility: visible;
     transform: translateX(0);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import Sidebar from './sidebar';
 import { useAuth } from '../context/AuthContext';
 import '../styles/componentstyles/Dashboard.css';
@@ -15,7 +16,7 @@ export default function Dashboard({ activeTab, children }) {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      setIsSidebarOpen(false);
+      if (!mobile) setIsSidebarOpen(false);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -49,6 +50,14 @@ export default function Dashboard({ activeTab, children }) {
       />
 
       <main className="common-dashboard-main">
+        {isMobile && (
+          <div className="mobile-header">
+            <button className="mobile-menu-btn" onClick={toggleSidebar} aria-label="Open Menu">
+              <Menu size={24} />
+            </button>
+            <h1 className="mobile-app-title">3i Services</h1>
+          </div>
+        )}
         <div className="common-dashboard-body">
           {children}
         </div>

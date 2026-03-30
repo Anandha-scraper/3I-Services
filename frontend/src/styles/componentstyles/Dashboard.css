@@ -1,14 +1,12 @@
 /* ========== Dashboard Common Layout shell ========== */
 .common-dashboard {
   --sidebar-collapsed-width: 84px;
-  --home-bg: #f0f4f8;
 
   display: flex;
   min-height: 100vh;
   width: 100vw;
   max-width: 100%;
   overflow-x: hidden;
-  background: var(--home-bg);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: #0f172a;
 }
@@ -22,12 +20,47 @@
   flex-direction: column;
   min-width: 0;
   max-width: 100%;
+
+  background-color: #f8fafc;
+  background-image: radial-gradient(#b6c4d4 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+}
+
+.mobile-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  color: #0f172a;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-app-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #AEB784;
 }
 
 @media (max-width: 767px) {
   .common-dashboard-main {
-    /* Main area now always sits next to the collapsed sidebar in mobile too */
-    margin-left: var(--sidebar-collapsed-width);
+    margin-left: 0;
   }
 }
 
