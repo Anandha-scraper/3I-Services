@@ -57,15 +57,21 @@ const Masonry = ({
   scaleOnHover = true,
   hoverScale = 0.95,
   blurToFocus = true,
-  colorShiftOnHover = false
+  colorShiftOnHover = false,
+  explicitWidth = null, // New prop for explicit width control
+  explicitPosition = 'absolute', // New prop for position control
+  customCardClasses = '', // New prop for custom CSS classes
+  columnCount = null // New prop for strict column count
 }) => {
-  const columns = useMedia(
+  const mediaColumns = useMedia(
     ['(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
     [5, 4, 3, 2],
     1
   );
+  
+  const columns = columnCount || mediaColumns;
 
-  const [containerRef, { width }] = useMeasure();
+  const [containerRef, { width, height: containerHeight }] = useMeasure();
   const [imagesReady, setImagesReady] = useState(false);
 
   const getInitialPosition = item => {
@@ -107,18 +113,22 @@ const Masonry = ({
 
     const colHeights = new Array(columns).fill(0);
     const columnWidth = width / columns;
+    const rows = Math.ceil(items.length / columns);
+    const itemHeight = containerHeight && containerHeight > 0 
+      ? containerHeight / rows 
+      : items[0]?.height / 2 || 200;
 
     return items.map(child => {
       const col = colHeights.indexOf(Math.min(...colHeights));
       const x = columnWidth * col;
-      const height = child.height / 2;
+      const height = itemHeight;
       const y = colHeights[col];
 
       colHeights[col] += height;
 
       return { ...child, x, y, w: columnWidth, h: height };
     });
-  }, [columns, items, width]);
+  }, [columns, items, width, containerHeight]);
 
   const hasMounted = useRef(false);
 
@@ -236,17 +246,29 @@ const Masonry = ({
   return (
     <div ref={containerRef} className="list">
       {grid.map(item => {
+        // Calculate explicit width and position styles
+        const cardStyle = {
+          perspective: '1000px',
+          ...(explicitWidth && { width: `${item.w}px` }),
+          position: explicitPosition,
+          '--card-width': explicitWidth ? `${item.w}px` : undefined,
+          '--card-top': `${item.y}px`,
+          '--card-left': `${item.x}px`
+        };
+
+        const cardClasses = `item-wrapper ${item.name || ''} ${customCardClasses}`.trim();
+
         return (
           <div
             key={item.id}
             data-key={item.id}
-            className={`item-wrapper ${item.name || ''}`}
+            className={cardClasses}
             onClick={() => window.open(item.url, '_blank', 'noopener')}
             onMouseEnter={e => handleMouseEnter(e, item)}
             onMouseLeave={e => handleMouseLeave(e, item)}
-            style={{ perspective: '1000px' }}
+            style={cardStyle}
           >
-            <div 
+            <div
               className="item-flip-container"
               style={{
                 position: 'relative',
@@ -258,9 +280,9 @@ const Masonry = ({
               }}
             >
               {/* Front face */}
-              <div 
-                className="item-img" 
-                style={{ 
+              <div
+                className="item-img"
+                style={{
                   backgroundImage: `url(${item.img})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
@@ -280,9 +302,9 @@ const Masonry = ({
               </div>
 
               {/* Back face */}
-              <div 
-                className="item-img" 
-                style={{ 
+              <div
+                className="item-img"
+                style={{
                   backgroundImage: `url(${item.flipImg || item.img})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',

@@ -10,41 +10,27 @@ import Masonry from '../components/Masonry';
 import '../styles/pagestyles/login.css';
 
 const loginItems = [
-    { id: "L1", img: "https://picsum.photos/id/1015/800/1000?grayscale", flipImg: "https://picsum.photos/id/1024/800/800?grayscale", url: "#", height: 600, name: "div-l-1" },
-    { id: "L2", img: "https://picsum.photos/id/1011/800/900?grayscale", flipImg: "https://picsum.photos/id/1025/800/1000?grayscale", url: "#", height: 450, name: "div-l-2" },
-    { id: "L3", img: "https://picsum.photos/id/1020/800/1200?grayscale", flipImg: "https://picsum.photos/id/1031/800/900?grayscale", url: "#", height: 650, name: "div-l-3" },
+    { id: "L1", img: "https://picsum.photos/id/1015/800/1000?grayscale", flipImg: "https://picsum.photos/id/1024/800/800?grayscale", url: "#", height: 400, name: "div-l-1" },
+    { id: "L2", img: "https://picsum.photos/id/1011/800/900?grayscale", flipImg: "https://picsum.photos/id/1025/800/1000?grayscale", url: "#", height: 400, name: "div-l-2" },
+    { id: "L3", img: "https://picsum.photos/id/1020/800/1200?grayscale", flipImg: "https://picsum.photos/id/1031/800/900?grayscale", url: "#", height: 400, name: "div-l-3" },
     { id: "L4", img: "https://picsum.photos/id/1043/800/800?grayscale", flipImg: "https://picsum.photos/id/1032/800/1200?grayscale", url: "#", height: 400, name: "div-l-4" },
-    { id: "L5", img: "https://picsum.photos/id/1035/800/1000?grayscale", flipImg: "https://picsum.photos/id/1033/800/700?grayscale", url: "#", height: 550, name: "div-l-5" },
+    { id: "L5", img: "https://picsum.photos/id/1035/800/1000?grayscale", flipImg: "https://picsum.photos/id/1033/800/700?grayscale", url: "#", height: 400, name: "div-l-5" },
     { id: "L6", img: "https://picsum.photos/id/1016/800/700?grayscale", flipImg: "https://picsum.photos/id/1036/800/1100?grayscale", url: "#", height: 400, name: "div-l-6" },
-    { id: "L7", img: "https://picsum.photos/id/1021/800/1100?grayscale", flipImg: "https://picsum.photos/id/1037/800/800?grayscale", url: "#", height: 600, name: "div-l-7" },
-    { id: "L8", img: "https://picsum.photos/id/1022/800/900?grayscale", flipImg: "https://picsum.photos/id/1038/800/1000?grayscale", url: "#", height: 450, name: "div-l-8" },
-    { id: "L9", img: "https://picsum.photos/id/1023/800/800?grayscale", flipImg: "https://picsum.photos/id/1039/800/900?grayscale", url: "#", height: 400, name: "div-l-9" },
-    { id: "L10", img: "https://picsum.photos/id/1040/800/1000?grayscale", flipImg: "https://picsum.photos/id/1049/800/1200?grayscale", url: "#", height: 550, name: "div-l-10" },
-    { id: "L11", img: "https://picsum.photos/id/1041/800/900?grayscale", flipImg: "https://picsum.photos/id/1050/800/800?grayscale", url: "#", height: 450, name: "div-l-11" },
-    { id: "L12", img: "https://picsum.photos/id/1042/800/1200?grayscale", flipImg: "https://picsum.photos/id/1051/800/1000?grayscale", url: "#", height: 650, name: "div-l-12" },
-    { id: "L13", img: "https://picsum.photos/id/1044/800/700?grayscale", flipImg: "https://picsum.photos/id/1052/800/900?grayscale", url: "#", height: 400, name: "div-l-13" },
-    { id: "L14", img: "https://picsum.photos/id/1045/800/800?grayscale", flipImg: "https://picsum.photos/id/1053/800/700?grayscale", url: "#", height: 450, name: "div-l-14" },
-    { id: "L15", img: "https://picsum.photos/id/1047/800/1100?grayscale", flipImg: "https://picsum.photos/id/1054/800/1100?grayscale", url: "#", height: 600, name: "div-l-15" },
-    { id: "L16", img: "https://picsum.photos/id/1048/800/900?grayscale", flipImg: "https://picsum.photos/id/1055/800/900?grayscale", url: "#", height: 550, name: "div-l-16" }
+    { id: "L7", img: "https://picsum.photos/id/1021/800/1100?grayscale", flipImg: "https://picsum.photos/id/1037/800/800?grayscale", url: "#", height: 400, name: "div-l-7" },
+    { id: "L8", img: "https://picsum.photos/id/1022/800/900?grayscale", flipImg: "https://picsum.photos/id/1038/800/1000?grayscale", url: "#", height: 400, name: "div-l-8" },
+    { id: "L9", img: "https://picsum.photos/id/1023/800/800?grayscale", flipImg: "https://picsum.photos/id/1039/800/900?grayscale", url: "#", height: 400, name: "div-l-9" }
 ];
 
 const signupItems = [
-    { id: "S1", img: "https://picsum.photos/id/1024/800/800?grayscale", flipImg: "https://picsum.photos/id/1015/800/1000?grayscale", url: "#", height: 450, name: "div-s-1" },
-    { id: "S2", img: "https://picsum.photos/id/1025/800/1000?grayscale", flipImg: "https://picsum.photos/id/1011/800/900?grayscale", url: "#", height: 550, name: "div-s-2" },
-    { id: "S3", img: "https://picsum.photos/id/1031/800/900?grayscale", flipImg: "https://picsum.photos/id/1020/800/1200?grayscale", url: "#", height: 450, name: "div-s-3" },
-    { id: "S4", img: "https://picsum.photos/id/1032/800/1200?grayscale", flipImg: "https://picsum.photos/id/1043/800/800?grayscale", url: "#", height: 650, name: "div-s-4" },
+    { id: "S1", img: "https://picsum.photos/id/1024/800/800?grayscale", flipImg: "https://picsum.photos/id/1015/800/1000?grayscale", url: "#", height: 400, name: "div-s-1" },
+    { id: "S2", img: "https://picsum.photos/id/1025/800/1000?grayscale", flipImg: "https://picsum.photos/id/1011/800/900?grayscale", url: "#", height: 400, name: "div-s-2" },
+    { id: "S3", img: "https://picsum.photos/id/1031/800/900?grayscale", flipImg: "https://picsum.photos/id/1020/800/1200?grayscale", url: "#", height: 400, name: "div-s-3" },
+    { id: "S4", img: "https://picsum.photos/id/1032/800/1200?grayscale", flipImg: "https://picsum.photos/id/1043/800/800?grayscale", url: "#", height: 400, name: "div-s-4" },
     { id: "S5", img: "https://picsum.photos/id/1033/800/700?grayscale", flipImg: "https://picsum.photos/id/1035/800/1000?grayscale", url: "#", height: 400, name: "div-s-5" },
-    { id: "S6", img: "https://picsum.photos/id/1036/800/1100?grayscale", flipImg: "https://picsum.photos/id/1016/800/700?grayscale", url: "#", height: 600, name: "div-s-6" },
-    { id: "S7", img: "https://picsum.photos/id/1037/800/800?grayscale", flipImg: "https://picsum.photos/id/1021/800/1100?grayscale", url: "#", height: 450, name: "div-s-7" },
-    { id: "S8", img: "https://picsum.photos/id/1038/800/1000?grayscale", flipImg: "https://picsum.photos/id/1022/800/900?grayscale", url: "#", height: 550, name: "div-s-8" },
-    { id: "S9", img: "https://picsum.photos/id/1039/800/900?grayscale", flipImg: "https://picsum.photos/id/1023/800/800?grayscale", url: "#", height: 450, name: "div-s-9" },
-    { id: "S10", img: "https://picsum.photos/id/1049/800/1200?grayscale", flipImg: "https://picsum.photos/id/1040/800/1000?grayscale", url: "#", height: 650, name: "div-s-10" },
-    { id: "S11", img: "https://picsum.photos/id/1050/800/800?grayscale", flipImg: "https://picsum.photos/id/1041/800/900?grayscale", url: "#", height: 400, name: "div-s-11" },
-    { id: "S12", img: "https://picsum.photos/id/1051/800/1000?grayscale", flipImg: "https://picsum.photos/id/1042/800/1200?grayscale", url: "#", height: 550, name: "div-s-12" },
-    { id: "S13", img: "https://picsum.photos/id/1052/800/900?grayscale", flipImg: "https://picsum.photos/id/1044/800/700?grayscale", url: "#", height: 450, name: "div-s-13" },
-    { id: "S14", img: "https://picsum.photos/id/1053/800/700?grayscale", flipImg: "https://picsum.photos/id/1045/800/800?grayscale", url: "#", height: 400, name: "div-s-14" },
-    { id: "S15", img: "https://picsum.photos/id/1054/800/1100?grayscale", flipImg: "https://picsum.photos/id/1047/800/1100?grayscale", url: "#", height: 350, name: "div-s-15" },
-    { id: "S16", img: "https://picsum.photos/id/1055/800/900?grayscale", flipImg: "https://picsum.photos/id/1048/800/900?grayscale", url: "#", height: 550, name: "div-s-16" }
+    { id: "S6", img: "https://picsum.photos/id/1036/800/1100?grayscale", flipImg: "https://picsum.photos/id/1016/800/700?grayscale", url: "#", height: 400, name: "div-s-6" },
+    { id: "S7", img: "https://picsum.photos/id/1037/800/800?grayscale", flipImg: "https://picsum.photos/id/1021/800/1100?grayscale", url: "#", height: 400, name: "div-s-7" },
+    { id: "S8", img: "https://picsum.photos/id/1038/800/1000?grayscale", flipImg: "https://picsum.photos/id/1022/800/900?grayscale", url: "#", height: 400, name: "div-s-8" },
+    { id: "S9", img: "https://picsum.photos/id/1039/800/900?grayscale", flipImg: "https://picsum.photos/id/1023/800/800?grayscale", url: "#", height: 400, name: "div-s-9" }
 ];
 
 export default function LoginPage() {
@@ -414,6 +400,9 @@ export default function LoginPage() {
             hoverScale={0.95}
             blurToFocus
             colorShiftOnHover={false}
+            explicitWidth={true}
+            explicitPosition="absolute"
+            columnCount={3}
           />
         ) : (
           <Masonry
@@ -427,6 +416,9 @@ export default function LoginPage() {
             hoverScale={0.95}
             blurToFocus
             colorShiftOnHover={false}
+            explicitWidth={true}
+            explicitPosition="absolute"
+            columnCount={3}
           />
         )}
       </div>
