@@ -365,49 +365,55 @@ export default function RemainderPage() {
                     <div key={`${item.id || item.ledger_id}-${idx}`} className="remainder-item">
                       <div className="remainder-item__marker"></div>
 
-                      <div className="remainder-item__content">
-                        {/* Top Section - Ledger Name */}
-                        <div className="remainder-item__header">
-                          <h3 className="remainder-item__title">
-                            {item.ledger_name || '—'}
-                          </h3>
-                          {item.ledger_id && (
-                            <code className="remainder-item__id">
-                              {item.ledger_id}
-                            </code>
-                          )}
-                        </div>
-
-                        {/* Meta Info */}
-                        <div className="remainder-item__meta">
-                          {item.city && (
-                            <div className="remainder-item__meta-item">
-                              <MapPin size={14} />
-                              <span>{item.city}</span>
-                            </div>
-                          )}
-                          {item.group && item.group !== '-' && (
-                            <div className="remainder-item__meta-item">
-                              <FileText size={14} />
-                              <span>{item.group}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Comments Section */}
-                        {item.lastComments && (
-                          <div className="remainder-item__comments">
-                            <div className="remainder-item__comments-icon">
-                              <MessageSquare size={16} />
-                            </div>
-                            <p className="remainder-item__comments-text">
-                              {item.lastComments}
-                            </p>
+                      <div className="remainder-item__content" style={{ flexDirection: 'row', alignItems: 'center', display: 'flex', width: '100%' }}>
+                        
+                        {/* Left Section - Detail */}
+                        <div style={{ flex: '1', minWidth: '0' }}>
+                          {/* Top Section - Ledger Name */}
+                          <div className="remainder-item__header">
+                            <h3 className="remainder-item__title">
+                              {item.ledger_name || '—'}
+                            </h3>
+                            {item.ledger_id && (
+                              <code className="remainder-item__id">
+                                {item.ledger_id}
+                              </code>
+                            )}
                           </div>
-                        )}
 
-                        {/* Amount Info */}
-                        <div className="remainder-item__amounts">
+                          {/* Meta Info */}
+                          <div className="remainder-item__meta" style={{ marginTop: '0.5rem' }}>
+                            {item.city && (
+                              <div className="remainder-item__meta-item">
+                                <MapPin size={14} />
+                                <span>{item.city}</span>
+                              </div>
+                            )}
+                            {item.group && item.group !== '-' && (
+                              <div className="remainder-item__meta-item">
+                                <FileText size={14} />
+                                <span>{item.group}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Center Section - Comments Section */}
+                        <div style={{ flex: '1.5', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {item.lastComments ? (
+                            <div className="remainder-item__comments" style={{ width: '100%', margin: 0, backgroundColor: '#f9f9f9', padding: '0.75rem', borderRadius: '0.5rem', borderLeft: '4px solid var(--color-primary-red)' }}>
+                              <div className="remainder-item__comments-icon" style={{ marginTop: '2px' }}>
+                                <MessageSquare size={16} />
+                              </div>
+                              <p className="remainder-item__comments-text" style={{ margin: 0 }}>
+                                {item.lastComments}
+                              </p>
+                            </div>
+                          ) : <div style={{ width: '100%' }}></div>}
+                        </div>
+
+                        {/* Right Section - Amount Info */}
+                        <div className="remainder-item__amounts" style={{ flexShrink: 0, marginTop: 0 }}>
                           {item.debit !== 0 && (
                             <div className="remainder-item__amount remainder-item__amount--debit">
                               <span className="remainder-item__amount-label">Debit</span>

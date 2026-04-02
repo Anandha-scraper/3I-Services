@@ -1,206 +1,135 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, LogIn, UserPlus, MapPin, Mail, Eye, EyeOff, Scale, FileText, Network, Smartphone, Code, Settings, PieChart, Cpu, RadioTower, Phone, ArrowLeft, Clock } from 'lucide-react';
-import { Dropdown, cityOptions, GradientSubmitButton } from '../components/Button';
-import DatePicker from '../components/datepicker';
-import Alert from '../components/Alert';
 import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../utils/api';
-import '../styles/componentstyles/Button.css';
-import '../styles/pagestyles/login.css';
+import { AnimatedButton, Dropdown, cityOptions } from '../components/Button';
+import DatePicker from '../components/datepicker';
+import Loader from '../components/loader';
 
-const cardData = [
-  {
-    id: "C1",
-    title: "Regulatory",
-    icon: <Scale size={80} color="#1d4ed8" />,
-    features: [
-      "Licence Compliance Management - SARAS",
-      "Periodic Audit Compliance",
-      "Licence Fee, PBG / FBG & Optimisation Management"
-    ],
-    height: 300
+const CONFIG = {
+  carousel: {
+    transitionSpeed: 0.7,
+    autoplayInterval: 2000,
+    scaleDropoff: 0.19,
+    spreadX: 20,
+    dropY: 10,
+    // Card dimensions (responsive: mobile sm  / tablet md  / desktop lg )
+    cardWidth: { sm: 280, md: 320, lg: 500},   // in pixels
+    cardHeight: { sm: 380, md: 450, lg: 500},  // in pixels
   },
-  {
-    id: "C2",
-    title: "Licence Management",
-    icon: <FileText size={80} color="#1d4ed8" />,
-    features: [
-      "New Licence Application on SARAL Sanchar",
-      "Licence Renewal",
-      "Periodic Compliance"
-    ],
-    height: 300
-  },
-  {
-    id: "C3",
-    title: "Network Audit",
-    icon: <Network size={80} color="#06b6d4" />,
-    features: [
-      "Network Optimisation",
-      "Network Security"
-    ],
-    height: 300
-  },
-  {
-    id: "C4",
-    title: "Mobile App Development",
-    icon: <Smartphone size={80} color="#3b82f6" />,
-    description: "High-performance apps tailored to your business needs (Android & iOS).",
-    features: [
-      "Cross-platform Solutions",
-      "UI/UX-focused Design",
-      "Secure & Scalable"
-    ],
-    height: 350
-  },
-  {
-    id: "C5",
-    title: "Web Development",
-    icon: <Code size={80} color="#10b981" />,
-    description: "Modern, responsive, and performance-driven websites.",
-    features: [
-      "Corporate & Business Sites",
-      "CMS-based Solutions",
-      "SEO-friendly"
-    ],
-    height: 350
-  },
-  {
-    id: "C6",
-    title: "Custom Software",
-    icon: <Settings size={80} color="#ef4444" />,
-    description: "Customized software solutions aligned with unique workflows.",
-    features: [
-      "Enterprise Development",
-      "Process Automation",
-      "System Integration"
-    ],
-    height: 350
-  },
-  {
-    id: "C7",
-    title: "ERP Software",
-    icon: <PieChart size={80} color="#3b82f6" />,
-    description: "Comprehensive resource planning for various sectors.",
-    tags: ["Hospitality", "Manufacturing", "Schools / Universities", "Attendance & Security"],
-    features: [
-      "Process Optimization",
-      "Real-time Reporting"
-    ],
-    height: 350
-  },  
-  {
-    id: "C8",
-    title: "IoT Based Solutions",
-    icon: <Cpu size={80} color="#0ea5e9" />,
-    description: "Smart connectivity for modern infrastructure.",
-    tags: ["Smart Metering", "Garbage Clearance", "Visitor Management"],
-    features: [
-      "Remote Monitoring",
-      "Data Analytics"
-    ],
-    height: 350
-  },
-  {
-    id: "C9",
-    title: "RFID Solutions",
-    icon: <RadioTower size={80} color="#10b981" />,
-    description: "Advanced tracking and management systems.",
-    tags: ["File Tracking", "Asset Tracking", "Inventory"],
-    features: [
-      "Precision Tracking",
-      "Automated Logging"
-    ],
-    height: 350
+  theme: {
+    accentColor: '#fbbf24',    // Golden amber - complements maroon
+    panelBg: '#450a0a',        // Deep maroon
+    bgLight: '#fef2f2',        // Light rose tint background
   }
+};
+
+// --- ICONS (Inline SVGs) ---
+const Icons = {
+  Eye: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+  EyeOff: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>,
+  ArrowLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>,
+  Loader: () => <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+};
+
+// --- CAROUSEL CARDS DATA ---
+const LOGIN_CARDS = [
+  { id: 1, title: 'Regulatory', keyword: 'compliance', img: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop' },
+  { id: 2, title: 'Licence', keyword: 'management', img: 'https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?q=80&w=800&auto=format&fit=crop' },
+  { id: 3, title: 'Network', keyword: 'audit', img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop' },
+  { id: 4, title: 'Mobile Apps', keyword: 'development', img: 'https://images.unsplash.com/photo-1509343252989-198994fa86c4?q=80&w=800&auto=format&fit=crop' },
+  { id: 5, title: 'Web Dev', keyword: 'solutions', img: 'https://images.unsplash.com/photo-1580238053412-19cce48cb262?q=80&w=800&auto=format&fit=crop' },
+  { id: 6, title: 'Custom Software', keyword: 'innovation', img: 'https://images.unsplash.com/photo-1496660505504-20d0fa8ef9de?q=80&w=800&auto=format&fit=crop' },
+  { id: 7, title: 'ERP Software', keyword: 'enterprise', img: 'https://images.unsplash.com/photo-1603351154351-5e2d0600bb77?q=80&w=800&auto=format&fit=crop' },
+];
+
+const SIGNUP_CARDS = [
+  { id: 8, title: 'IoT Solutions', keyword: 'connectivity', img: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800&auto=format&fit=crop' },
+  { id: 9, title: 'RFID', keyword: 'tracking', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
+  { id: 10, title: 'Security', keyword: 'protection', img: 'https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=800&auto=format&fit=crop' },
+  { id: 11, title: 'Analytics', keyword: 'insights', img: 'https://images.unsplash.com/photo-1514315384763-ba401779410f?q=80&w=800&auto=format&fit=crop' },
+  { id: 12, title: 'Cloud', keyword: 'scalability', img: 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?q=80&w=800&auto=format&fit=crop' },
+  { id: 13, title: 'Support', keyword: 'excellence', img: 'https://images.unsplash.com/photo-1496062031456-07b8f162a322?q=80&w=800&auto=format&fit=crop' },
+  { id: 14, title: 'Consulting', keyword: 'expertise', img: 'https://images.unsplash.com/photo-1507369512168-9b7ee6caee1a?q=80&w=800&auto=format&fit=crop' },
+];
+
+const COUNTRY_OPTIONS = [
+  { value: '+91', label: '+91 - India', shortLabel: '+91' },
+  { value: '+65', label: '+65 - Singapore', shortLabel: '+65' },
+  { value: '+1', label: '+1 - USA', shortLabel: '+1' },
+  { value: '+44', label: '+44 - UK', shortLabel: '+44' },
+  { value: '+61', label: '+61 - Australia', shortLabel: '+61' },
+  { value: '+86', label: '+86 - China', shortLabel: '+86' },
+  { value: '+81', label: '+81 - Japan', shortLabel: '+81' },
+  { value: '+33', label: '+33 - France', shortLabel: '+33' },
+  { value: '+49', label: '+49 - Germany', shortLabel: '+49' },
+  { value: '+39', label: '+39 - Italy', shortLabel: '+39' },
 ];
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [forgotPasswordStep, setForgotPasswordStep] = useState(1);
-  const [forgotPasswordData, setForgotPasswordData] = useState({
-    email: '',
-    otp: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [forgotPasswordError, setForgotPasswordError] = useState('');
-  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const [resendTimer, setResendTimer] = useState(0);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    userId: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    fatherName: '',
-    dob: null,
-    city: '',
-    countryCode: '+91',
-    phone: '',
-    email: ''
-  });
-  const [error, setError] = useState('');
-  const [alertState, setAlertState] = useState(null);
-  const { login } = useAuth();
+  const isScrolling = useRef(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // UI Flow State
+  const [activePanel, setActivePanel] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const currentCards = useMemo(() => {
+    if (activePanel === 'login' || activePanel === 'forgot') return LOGIN_CARDS;
+    if (activePanel === 'signup') return SIGNUP_CARDS;
+    return [...LOGIN_CARDS, ...SIGNUP_CARDS];
+  }, [activePanel]);
+  
+  // Forms State
+  const [formData, setFormData] = useState({
+    userId: '', password: '', firstName: '', lastName: '', fatherName: '',
+    dob: '', city: '', countryCode: '+91', phone: '', email: ''
+  });
+  
+  const [forgotData, setForgotData] = useState({ email: '', otp: '', password: '', confirmPassword: '' });
+  const [forgotStep, setForgotStep] = useState(1);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  // Toggles & Status
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [alert, setAlert] = useState({ show: false, type: '', message: '' });
 
   const OTP_VALID_TIME = 120;
   const OTP_RESEND_TIME = 60;
 
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setTimeout(() => setTimer(timer - 1), 1000);
-      return () => clearTimeout(interval);
-    }
-  }, [timer]);
+  const showAlert = (type, message) => {
+    setAlert({ show: true, type, message });
+    setTimeout(() => setAlert({ show: false, type: '', message: '' }), 4000);
+  };
 
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const interval = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(interval);
-    }
-  }, [resendTimer]);
-
-  const countryCodes = [
-    { code: '+91', country: 'India', countryCode: 'in' },
-    { code: '+65', country: 'Singapore', countryCode: 'sg' },
-    { code: '+1', country: 'USA', countryCode: 'us' },
-    { code: '+44', country: 'UK', countryCode: 'gb' },
-    { code: '+61', country: 'Australia', countryCode: 'au' },
-    { code: '+86', country: 'China', countryCode: 'cn' },
-    { code: '+81', country: 'Japan', countryCode: 'jp' },
-    { code: '+33', country: 'France', countryCode: 'fr' },
-    { code: '+49', country: 'Germany', countryCode: 'de' },
-    { code: '+39', country: 'Italy', countryCode: 'it' },
-  ];
-
-  const handleInputChange = (e) => {
+  const handleInputChange = (e, target = 'form') => {
     const { name, value } = e.target;
-    
-    // Handle phone input - only allow digits, max 10 characters
-    if (name === 'phone') {
-      const phoneValue = value.replace(/\D/g, '').slice(0, 10);
-      setFormData(prev => ({
-        ...prev,
-        [name]: phoneValue
+    if (target === 'forgot') {
+      setForgotData(prev => ({ 
+        ...prev, 
+        [name]: name === 'otp' ? value.replace(/\D/g, '').slice(0, 6) : value 
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      if (name === 'phone') {
+        setFormData(prev => ({ ...prev, [name]: value.replace(/\D/g, '').slice(0, 10) }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
     }
   };
 
+  // --- REAL API HANDLERS ---
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
-    setAlertState({ type: 'loading', title: 'Please wait...' });
+    if (!formData.userId || !formData.password) {
+      return showAlert('error', 'Please fill all required fields');
+    }
+    
+    setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
@@ -209,31 +138,26 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Login failed');
+      
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       login(data.user);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      showAlert('error', err.message);
     } finally {
-      setAlertState(null);
+      setIsLoading(false);
     }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setError('');
-
-    // Validate phone number
-    if (!formData.phone || formData.phone.length !== 10) {
-      setError('Phone number must be exactly 10 digits');
-      return;
+    
+    if (formData.phone.length !== 10) {
+      return showAlert('error', 'Phone number must be exactly 10 digits');
     }
-
-    setAlertState({ type: 'loading', title: 'Sending Request...' });
-
-    const startTime = Date.now();
-
+    
+    setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/signup/register'), {
         method: 'POST',
@@ -251,732 +175,459 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Signup failed');
-
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = 2000 - elapsedTime;
-
+      
+      showAlert('success', 'Request sent for admin. Wait for confirmation mail.');
       setTimeout(() => {
-        setAlertState({
-          type: 'success',
-          title: 'Request Sent',
-          message: 'Request sent for admin. Wait for confirmation mail.'
+        setActivePanel('login');
+        setFormData({
+          userId: '', password: '', firstName: '', lastName: '', fatherName: '',
+          dob: '', city: '', countryCode: '+91', phone: '', email: ''
         });
-
-        setTimeout(() => {
-          setIsLogin(true);
-          setFormData({
-            userId: '',
-            password: '',
-            firstName: '',
-            lastName: '',
-            fatherName: '',
-            dob: null,
-            city: '',
-            countryCode: '+91',
-            phone: '',
-            email: ''
-          });
-          setAlertState(null);
-        }, 3000);
-      }, Math.max(0, remainingTime));
-
+      }, 2500);
     } catch (err) {
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = 2000 - elapsedTime;
-
-      setTimeout(() => {
-        setAlertState({ type: 'error', title: 'Signup Failed', message: err.message });
-      }, Math.max(0, remainingTime));
+      showAlert('error', err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAlertConfirm = () => {
-    setAlertState(null);
-  };
-
-  const handleForgotPasswordChange = (e) => {
-    const { name, value } = e.target;
-    setForgotPasswordData(prev => ({
-      ...prev,
-      [name]: name === 'otp' ? value.replace(/\D/g, '').slice(0, 6) : value
-    }));
-  };
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    setForgotPasswordError('');
-
-    if (!forgotPasswordData.email.trim()) {
-      setForgotPasswordError('Please enter your email');
-      return;
-    }
-
+  // Forgot Password Flow
+  const handleForgotSendOtp = async (e) => {
+    e?.preventDefault();
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(forgotPasswordData.email)) {
-      setForgotPasswordError('Please enter a valid email');
-      return;
+    if (!emailRegex.test(forgotData.email)) {
+      return showAlert('error', 'Please enter a valid email');
     }
-
-    setForgotPasswordLoading(true);
-    setAlertState({ type: 'loading', title: 'Sending OTP...' });
-
+    
+    setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/password/send-otp'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotPasswordData.email })
+        body: JSON.stringify({ email: forgotData.email })
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
-
-      setAlertState({
-        type: 'success',
-        title: 'OTP Sent',
-        message: `OTP has been sent to ${forgotPasswordData.email}`
-      });
-
-      setForgotPasswordStep(2);
-      setTimer(OTP_VALID_TIME);
+      
+      setForgotStep(2);
+      setOtpTimer(OTP_VALID_TIME);
       setResendTimer(OTP_RESEND_TIME);
-      setForgotPasswordData(prev => ({ ...prev, otp: '' }));
-      setForgotPasswordError('');
-
-      setTimeout(() => setAlertState(null), 3000);
+      setForgotData(prev => ({ ...prev, otp: '' }));
+      showAlert('success', `OTP sent to ${forgotData.email}`);
     } catch (err) {
-      setForgotPasswordError(err.message);
-      setAlertState(null);
+      showAlert('error', err.message);
     } finally {
-      setForgotPasswordLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleResendOtp = async (e) => {
-    e.preventDefault();
-    setForgotPasswordError('');
-
+  const handleResendOtp = async () => {
     if (resendTimer > 0) return;
-
-    setForgotPasswordLoading(true);
-    setAlertState({ type: 'loading', title: 'Resending OTP...' });
-
+    
+    setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/password/resend-otp'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotPasswordData.email })
+        body: JSON.stringify({ email: forgotData.email })
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to resend OTP');
-
-      setAlertState({
-        type: 'success',
-        title: 'OTP Resent',
-        message: 'OTP has been resent to your email'
-      });
-
-      setTimer(OTP_VALID_TIME);
+      
+      setOtpTimer(OTP_VALID_TIME);
       setResendTimer(OTP_RESEND_TIME);
-      setForgotPasswordData(prev => ({ ...prev, otp: '' }));
-      setForgotPasswordError('');
-
-      setTimeout(() => setAlertState(null), 3000);
+      setForgotData(prev => ({ ...prev, otp: '' }));
+      showAlert('success', 'OTP resent to your email');
     } catch (err) {
-      setForgotPasswordError(err.message);
-      setAlertState(null);
+      showAlert('error', err.message);
     } finally {
-      setForgotPasswordLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleVerifyOtp = async (e) => {
+  const handleForgotVerifyOtp = async (e) => {
     e.preventDefault();
-    setForgotPasswordError('');
-
-    if (!forgotPasswordData.otp.trim()) {
-      setForgotPasswordError('Please enter the OTP');
-      return;
+    if (forgotData.otp.length !== 6) {
+      return showAlert('error', 'OTP must be 6 digits');
     }
-
-    if (forgotPasswordData.otp.length !== 6) {
-      setForgotPasswordError('OTP must be 6 digits');
-      return;
-    }
-
-    setForgotPasswordLoading(true);
-    setAlertState({ type: 'loading', title: 'Verifying OTP...' });
-
+    
+    setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/password/verify-otp'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotPasswordData.email, otp: forgotPasswordData.otp })
+        body: JSON.stringify({ email: forgotData.email, otp: forgotData.otp })
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Invalid OTP');
-
-      setAlertState({
-        type: 'success',
-        title: 'OTP Verified',
-        message: 'Proceeding to password reset...'
-      });
-
-      setForgotPasswordStep(3);
-      setForgotPasswordData(prev => ({ ...prev, password: '', confirmPassword: '' }));
-      setForgotPasswordError('');
-
-      setTimeout(() => setAlertState(null), 2000);
+      
+      setForgotStep(3);
+      setForgotData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+      showAlert('success', 'OTP verified. Set new password.');
     } catch (err) {
-      setForgotPasswordError(err.message);
-      setAlertState(null);
+      showAlert('error', err.message);
     } finally {
-      setForgotPasswordLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleResetPassword = async (e) => {
+  const handleForgotReset = async (e) => {
     e.preventDefault();
-    setForgotPasswordError('');
-
-    if (!forgotPasswordData.password.trim() || !forgotPasswordData.confirmPassword.trim()) {
-      setForgotPasswordError('Please fill in all password fields');
-      return;
+    
+    if (forgotData.password.length < 6) {
+      return showAlert('error', 'Password must be at least 6 characters');
     }
-
-    if (forgotPasswordData.password.length < 6) {
-      setForgotPasswordError('Password must be at least 6 characters');
-      return;
+    if (forgotData.password !== forgotData.confirmPassword) {
+      return showAlert('error', 'Passwords do not match');
     }
-
-    if (forgotPasswordData.password !== forgotPasswordData.confirmPassword) {
-      setForgotPasswordError('Passwords do not match');
-      return;
-    }
-
-    setForgotPasswordLoading(true);
-    setAlertState({ type: 'loading', title: 'Resetting Password...' });
-
+    
+    setIsLoading(true);
     try {
       const res = await fetch(apiUrl('/api/password/reset'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: forgotPasswordData.email,
-          otp: forgotPasswordData.otp,
-          newPassword: forgotPasswordData.password
+          email: forgotData.email,
+          otp: forgotData.otp,
+          newPassword: forgotData.password
         })
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to reset password');
-
-      setAlertState({
-        type: 'success',
-        title: 'Password Reset Successfully',
-        message: 'You can now login with your new password'
-      });
-
-      setTimeout(() => {
-        setIsForgotPassword(false);
-        setForgotPasswordStep(1);
-        setForgotPasswordData({ email: '', otp: '', password: '', confirmPassword: '' });
-        setForgotPasswordError('');
-        setAlertState(null);
-      }, 3000);
+      
+      showAlert('success', 'Password reset successfully!');
+      setForgotData({ email: '', otp: '', password: '', confirmPassword: '' });
+      setForgotStep(1);
+      setTimeout(() => setActivePanel('login'), 2000);
     } catch (err) {
-      setForgotPasswordError(err.message);
-      setAlertState(null);
+      showAlert('error', err.message);
     } finally {
-      setForgotPasswordLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleBackFromForgotPassword = () => {
-    setIsForgotPassword(false);
-    setForgotPasswordStep(1);
-    setForgotPasswordData({ email: '', otp: '', password: '', confirmPassword: '' });
-    setForgotPasswordError('');
-    setTimer(0);
-    setResendTimer(0);
+  // --- EFFECTS ---
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [activePanel]);
+
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0 && forgotStep === 2) {
+      interval = setInterval(() => setResendTimer(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer, forgotStep]);
+
+  useEffect(() => {
+    let interval;
+    if (otpTimer > 0 && forgotStep === 2) {
+      interval = setInterval(() => setOtpTimer(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpTimer, forgotStep]);
+
+  const generateLongShadow = (length = 15) => {
+    let shadow = '';
+    const color = '#fecdd3';  // Rose-200 for maroon theme
+    for (let i = 1; i <= length; i++) shadow += `${i}px ${i}px 0 ${color}${i === length ? '' : ','}`;
+    return shadow;
   };
 
+  // Carousel Navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') setActiveIndex((prev) => (prev + 1) % currentCards.length);
+      else if (e.key === 'ArrowLeft') setActiveIndex((prev) => (prev - 1 + currentCards.length) % currentCards.length);
+    };
+
+    const handleWheel = (e) => {
+      if (isScrolling.current) return;
+      isScrolling.current = true;
+      setTimeout(() => { isScrolling.current = false; }, Math.max(400, CONFIG.carousel.transitionSpeed * 500));
+      if (e.deltaY > 0 || e.deltaX > 0) setActiveIndex((prev) => (prev + 1) % currentCards.length);
+      else if (e.deltaY < 0 || e.deltaX < 0) setActiveIndex((prev) => (prev - 1 + currentCards.length) % currentCards.length);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    
+    const autoplayTimer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % currentCards.length);
+    }, CONFIG.carousel.autoplayInterval);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+      clearInterval(autoplayTimer);
+    };
+  }, [currentCards.length]);
+
+  // Shared Form Styles - Deep Maroon Theme. 
+  // Added custom autofill targeting classes to suppress native browser yellow background
+  const inputStyle = "w-full bg-transparent border-b border-rose-300/30 text-white py-2 focus:outline-none focus:border-amber-400 transition-colors placeholder:text-rose-200/50 text-sm md:text-base autofill:!bg-transparent autofill:shadow-[inset_0_0_0px_1000px_transparent] autofill:[-webkit-text-fill-color:white] [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#450a0a] [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:-webkit-autofill]:transition-all [&:-webkit-autofill]:duration-5000";
+  const btnStyle = "w-full py-3 bg-amber-400 text-rose-950 font-bold rounded-md hover:bg-amber-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+
   return (
-    <div className={`login-main-container ${!isLogin ? 'signup-active' : ''}`}>
-      {alertState && (
-        <Alert
-          type={alertState.type}
-          title={alertState.title}
-          message={alertState.message}
-          onConfirm={handleAlertConfirm}
-        />
-      )}
-      {/* Left White Background - Form Container */}
-      <div className="whole-form-container">
-        <div className={`form-container ${isLogin ? 'login-mode' : 'signup-mode'}`}>
-          {!isForgotPassword ? (
-            <>
-              <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
-              {isLogin && (
-                <p className="form-subtitle">
-                  Please sign in to your account
-                </p>
-              )}
+    <>
+      <Loader />
+      <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center font-sans bg-rose-50">
+      
+      {/* Dynamic Background Pattern */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #fecdd3 1px, transparent 1px),
+            linear-gradient(to bottom, #fecdd3 1px, transparent 1px)
+          `,
+          backgroundSize: "32px 32px",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+          maskImage: "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+        }}
+      />
 
-              <form onSubmit={isLogin ? handleLogin : handleSignup}>
-                {!isLogin && (
-                  <>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label htmlFor="firstName">First Name</label>
-                        <div className="input-wrapper">
-                          <User className="form-input-icon" size={20} />
-                          <input
-                            type="text"
-                            id="firstName"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            className="form-input"
-                            placeholder="Enter first name"
-                            required
-                          />
-                        </div>
-                      </div>
+      {/* Alert Banner */}
+      <div className={`absolute top-0 left-0 w-full z-[100] transition-all duration-500 ${alert.show ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+        <div className={`p-4 text-center text-white font-bold tracking-wide shadow-xl ${alert.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`}>
+          {alert.message}
+        </div>
+      </div>
 
-                      <div className="form-group">
-                        <label htmlFor="lastName">Last Name</label>
-                        <div className="input-wrapper">
-                          <User className="form-input-icon" size={20} />
-                          <input
-                            type="text"
-                            id="lastName"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            className="form-input"
-                            placeholder="Enter last name"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
+      {/* Top Right Toggle Button */}
+      <button
+        onClick={() => setActivePanel(activePanel ? null : 'login')}
+        className="absolute top-6 right-6 md:top-8 md:right-10 z-[60] text-rose-900 font-bold text-lg md:text-xl tracking-wide hover:text-rose-600 transition-colors"
+      >
+        {activePanel ? 'CLOSE' : 'LOGIN'}
+      </button>
 
-                    <div className="form-group">
-                      <label htmlFor="fatherName">Father&apos;s name</label>
-                      <div className="input-wrapper">
-                        <User className="form-input-icon" size={20} />
-                        <input
-                          type="text"
-                          id="fatherName"
-                          name="fatherName"
-                          value={formData.fatherName}
-                          onChange={handleInputChange}
-                          className="form-input"
-                          placeholder="Enter father&apos;s full name"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Date of Birth</label>
-                      <DatePicker
-                        name="dob"
-                        value={formData.dob}
-                        onChange={(value) => handleInputChange({ target: { name: 'dob', value } })}
-                        required={true}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <Dropdown
-                        label="City"
-                        name="city"
-                        options={cityOptions}
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        placeholder="Select your city"
-                        icon={MapPin}
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="phone">Phone Number</label>
-                      <div className="phone-input-wrapper">
-                        <select
-                          name="countryCode"
-                          value={formData.countryCode}
-                          onChange={handleInputChange}
-                          className="country-code-select"
-                        >
-                          {countryCodes.map((item) => (
-                            <option key={item.code} value={item.code}>
-                              {item.code} {item.country}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="tel"
-                          id="phone"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className="form-input phone-input"
-                          placeholder="Enter your phone number"
-                          maxLength="10"
-                          required
-                        />
-                      </div>
-                      <p style={{ fontSize: '12px', color: '#999', margin: '8px 0 0 0', padding: '0' }}>
-                        Phone number must be exactly 10 digits
-                      </p>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="email">Email</label>
-                      <div className="input-wrapper">
-                        <Mail className="form-input-icon" size={20} />
-                        <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          className="form-input"
-                          placeholder="Enter your email"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {isLogin && (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="userId">User ID</label>
-                      <div className="input-wrapper">
-                        <User className="form-input-icon" size={20} />
-                        <input
-                          type="text"
-                          id="userId"
-                          name="userId"
-                          value={formData.userId}
-                          onChange={handleInputChange}
-                          className="form-input"
-                          placeholder="Enter your user ID"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <div className="password-header">
-                        <label htmlFor="password">Password</label>
-                        <button
-                          type="button"
-                          className="forgot-password-link"
-                          onClick={() => setIsForgotPassword(true)}
-                        >
-                          Forgot Password?
-                        </button>
-                      </div>
-                      <div className="input-wrapper">
-                        <Lock className="form-input-icon" size={20} />
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          id="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          className="form-input"
-                          placeholder="Enter your password"
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="eye-icon-button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {error && <p className="error-message" style={{color: 'red', marginBottom: '1rem'}}>{error}</p>}
-
-                <GradientSubmitButton
-                  icon={LogIn}
-                  loading={!!alertState}
-                  loadingText={isLogin ? 'Logging in...' : 'Creating Account...'}
-                >
-                  {isLogin ? 'Login' : 'Create Account'}
-                </GradientSubmitButton>
-              </form>
-
-              <p className="toggle-text">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
-                <button
-                  type="button"
-                  className="signup-link"
-                  onClick={() => setIsLogin(!isLogin)}
-                >
-                  <UserPlus size={16} />
-                  {isLogin ? 'Sign up' : 'Log in'}
+      {/* LEFT SLIDING PANEL (LOGIN / FORGOT PASS) */}
+      <div 
+        className={`absolute top-0 left-0 h-full w-full md:w-[450px] bg-gradient-to-br from-[#450a0a] to-[#7f1d1d] shadow-[20px_0_50px_rgba(127,29,29,0.4)] z-[55] flex flex-col justify-center px-8 md:px-12 transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+          (activePanel === 'login' || activePanel === 'forgot') ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* LOGIN VIEW */}
+        {activePanel === 'login' && (
+          <div className="animate-fadeIn">
+            <h2 className="text-4xl md:text-5xl font-black text-amber-400 mb-2 tracking-tighter">WELCOME.</h2>
+            <p className="text-rose-200/70 mb-10 font-light">Enter your credentials to access the portal.</p>
+            
+            <form onSubmit={handleLogin} className="flex flex-col gap-6">
+              <input name="userId" value={formData.userId} onChange={handleInputChange} className={inputStyle} type="text" placeholder="User ID" required />
+              
+              <div className="relative">
+                <input name="password" value={formData.password} onChange={handleInputChange} className={inputStyle} type={showPassword ? 'text' : 'password'} placeholder="Password" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-rose-200/60 hover:text-white">
+                  {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
                 </button>
-              </p>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="back-button"
-                onClick={handleBackFromForgotPassword}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: 'none',
-                  border: 'none',
-                  color: '#667eea',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  padding: '0',
-                  marginBottom: '20px',
-                  transition: 'color 0.3s ease'
-                }}
-              >
-                <ArrowLeft size={18} />
-                Back to Login
-              </button>
-
-              <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-                <h1 style={{ fontSize: '24px', color: '#333', margin: '0 0 8px 0', fontWeight: '600' }}>
-                  Forgot Password?
-                </h1>
-                <p style={{ fontSize: '12px', color: '#999', margin: '0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Step {forgotPasswordStep} of 3
-                </p>
               </div>
 
-              {forgotPasswordStep === 1 && (
-                <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div className="form-group">
-                    <label>Email Address</label>
-                    <div className="input-wrapper">
-                      <Mail className="form-input-icon" size={20} />
-                      <input
-                        type="email"
-                        name="email"
-                        placeholder="Enter your registered email"
-                        value={forgotPasswordData.email}
-                        onChange={handleForgotPasswordChange}
-                        disabled={forgotPasswordLoading}
-                        className="form-input"
-                        required
-                      />
-                    </div>
-                    <p style={{ fontSize: '12px', color: '#999', margin: '8px 0 0 0', padding: '0' }}>
-                      We'll send you an OTP to verify your email
-                    </p>
-                  </div>
+              <div className="flex justify-end">
+                <button type="button" onClick={() => setActivePanel('forgot')} className="text-sm text-rose-200/60 hover:text-amber-400 transition-colors">Forgot Password?</button>
+              </div>
 
-                  {forgotPasswordError && (
-                    <div style={{ padding: '10px 12px', background: '#fee', border: '1px solid #fcc', borderRadius: '6px', color: '#c33', fontSize: '13px', fontWeight: '500' }}>
-                      {forgotPasswordError}
-                    </div>
-                  )}
+              <AnimatedButton variant="maroon" loading={isLoading} loadingText="SIGNING IN...">
+                SIGN IN
+              </AnimatedButton>
+            </form>
+            
+            <p className="mt-8 text-center text-sm text-rose-200/60 font-light">
+              Don&apos;t have an account? 
+              <button onClick={() => setActivePanel('signup')} className="text-amber-400 hover:text-white font-bold ml-2 transition-colors">Sign Up</button>
+            </p>
+          </div>
+        )}
 
-                  <GradientSubmitButton
-                    icon={Mail}
-                    loading={forgotPasswordLoading}
-                    loadingText="Sending..."
-                  >
-                    Send OTP
-                  </GradientSubmitButton>
-                </form>
-              )}
+        {/* FORGOT PASSWORD VIEW */}
+        {activePanel === 'forgot' && (
+          <div className="animate-fadeIn">
+            <button onClick={() => { setActivePanel('login'); setForgotStep(1); }} className="text-rose-200/60 hover:text-white mb-8 flex items-center gap-2">
+              <Icons.ArrowLeft /> Back to Login
+            </button>
+            
+            <h2 className="text-3xl md:text-4xl font-black text-amber-400 mb-2 tracking-tighter">RECOVER.</h2>
+            <p className="text-rose-200/70 mb-10 font-light">
+              {forgotStep === 1 ? 'Enter your email to receive an OTP.' : forgotStep === 2 ? 'Enter the 6-digit code sent to your email.' : 'Secure your account with a new password.'}
+            </p>
 
-              {forgotPasswordStep === 2 && (
-                <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div className="form-group">
-                    <label>Enter OTP</label>
-                    <p style={{ fontSize: '13px', color: '#666', background: '#f5f5f5', padding: '8px 12px', borderRadius: '6px', margin: '0' }}>
-                      Sent to: <strong style={{ color: '#667eea', fontWeight: '600' }}>{forgotPasswordData.email}</strong>
-                    </p>
-                    <div className="input-wrapper" style={{ marginTop: '8px' }}>
-                      <Lock className="form-input-icon" size={20} />
-                      <input
-                        type="text"
-                        name="otp"
-                        placeholder="Enter 6-digit OTP"
-                        value={forgotPasswordData.otp}
-                        onChange={handleForgotPasswordChange}
-                        disabled={forgotPasswordLoading}
-                        maxLength="6"
-                        className="form-input"
-                        required
-                      />
-                    </div>
+            {/* STEP 1: Email */}
+            {forgotStep === 1 && (
+              <form onSubmit={handleForgotSendOtp} className="flex flex-col gap-6">
+                <input name="email" value={forgotData.email} onChange={(e) => handleInputChange(e, 'forgot')} className={inputStyle} type="email" placeholder="Email Address" required />
+                <button type="submit" disabled={isLoading} className={btnStyle}>{isLoading ? <Icons.Loader /> : 'SEND OTP'}</button>
+              </form>
+            )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingTop: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#666' }}>
-                        <Clock size={16} style={{ color: '#f97316' }} />
-                        <span>OTP expires in: <strong style={{ color: '#f97316', fontWeight: '600' }}>{timer}s</strong></span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleResendOtp}
-                        disabled={resendTimer > 0 || forgotPasswordLoading}
-                        style={{
-                          background: resendTimer > 0 ? '#f0f0f0' : 'none',
-                          border: '1px solid #e0e0e0',
-                          color: resendTimer > 0 ? '#999' : '#667eea',
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: resendTimer > 0 ? 'not-allowed' : 'pointer',
-                          transition: 'all 0.3s ease',
-                          opacity: resendTimer > 0 ? 0.6 : 1,
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
-                      </button>
-                    </div>
-                  </div>
+            {/* STEP 2: Verify OTP */}
+            {forgotStep === 2 && (
+              <form onSubmit={handleForgotVerifyOtp} className="flex flex-col gap-6">
+                <input name="otp" value={forgotData.otp} onChange={(e) => handleInputChange(e, 'forgot')} className={`${inputStyle} text-center tracking-[0.5em] text-2xl font-bold`} type="text" maxLength={6} placeholder="------" required />
+                {otpTimer > 0 && (
+                  <p className="text-center text-sm text-rose-200/60">OTP valid for {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}</p>
+                )}
+                <button type="submit" disabled={isLoading} className={btnStyle}>{isLoading ? <Icons.Loader /> : 'VERIFY OTP'}</button>
+                <div className="text-center mt-4">
+                  <button type="button" onClick={handleResendOtp} disabled={resendTimer > 0 || isLoading} className={`text-sm ${resendTimer > 0 ? 'text-rose-300/50' : 'text-amber-400 hover:text-white'}`}>
+                    {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
+                  </button>
+                </div>
+              </form>
+            )}
 
-                  {forgotPasswordError && (
-                    <div style={{ padding: '10px 12px', background: '#fee', border: '1px solid #fcc', borderRadius: '6px', color: '#c33', fontSize: '13px', fontWeight: '500' }}>
-                      {forgotPasswordError}
-                    </div>
-                  )}
-
-                  <GradientSubmitButton
-                    icon={Lock}
-                    loading={forgotPasswordLoading}
-                    loadingText="Verifying..."
-                  >
-                    Verify OTP
-                  </GradientSubmitButton>
-                </form>
-              )}
-
-              {forgotPasswordStep === 3 && (
-                <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div className="form-group">
-                    <label>New Password</label>
-                    <div className="input-wrapper">
-                      <Lock className="form-input-icon" size={20} />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        placeholder="Enter new password"
-                        value={forgotPasswordData.password}
-                        onChange={handleForgotPasswordChange}
-                        disabled={forgotPasswordLoading}
-                        className="form-input"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={forgotPasswordLoading}
-                        style={{
-                          position: 'absolute',
-                          right: '14px',
-                          background: 'none',
-                          border: 'none',
-                          color: '#999',
-                          cursor: 'pointer',
-                          padding: '4px 8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'color 0.3s ease'
-                        }}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Confirm Password</label>
-                    <div className="input-wrapper">
-                      <Lock className="form-input-icon" size={20} />
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        name="confirmPassword"
-                        placeholder="Confirm new password"
-                        value={forgotPasswordData.confirmPassword}
-                        onChange={handleForgotPasswordChange}
-                        disabled={forgotPasswordLoading}
-                        className="form-input"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        disabled={forgotPasswordLoading}
-                        style={{
-                          position: 'absolute',
-                          right: '14px',
-                          background: 'none',
-                          border: 'none',
-                          color: '#999',
-                          cursor: 'pointer',
-                          padding: '4px 8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'color 0.3s ease'
-                        }}
-                      >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                    <p style={{ fontSize: '12px', color: '#999', margin: '8px 0 0 0', padding: '0' }}>
-                      Password must be at least 6 characters
-                    </p>
-                  </div>
-
-                  {forgotPasswordError && (
-                    <div style={{ padding: '10px 12px', background: '#fee', border: '1px solid #fcc', borderRadius: '6px', color: '#c33', fontSize: '13px', fontWeight: '500' }}>
-                      {forgotPasswordError}
-                    </div>
-                  )}
-
-                  <GradientSubmitButton
-                    icon={Lock}
-                    loading={forgotPasswordLoading}
-                    loadingText="Resetting..."
-                  >
-                    Reset Password
-                  </GradientSubmitButton>
-                </form>
-              )}
-            </>
-          )}
-        </div>
+            {/* STEP 3: Reset Password */}
+            {forgotStep === 3 && (
+              <form onSubmit={handleForgotReset} className="flex flex-col gap-6">
+                <div className="relative">
+                  <input name="password" value={forgotData.password} onChange={(e) => handleInputChange(e, 'forgot')} className={inputStyle} type={showPassword ? 'text' : 'password'} placeholder="New Password (min 6 chars)" required minLength={6} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-rose-200/60 hover:text-white">{showPassword ? <Icons.EyeOff /> : <Icons.Eye />}</button>
+                </div>
+                <div className="relative">
+                  <input name="confirmPassword" value={forgotData.confirmPassword} onChange={(e) => handleInputChange(e, 'forgot')} className={inputStyle} type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirm Password" required minLength={6} />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-rose-200/60 hover:text-white">{showConfirmPassword ? <Icons.EyeOff /> : <Icons.Eye />}</button>
+                </div>
+                <button type="submit" disabled={isLoading} className={btnStyle}>{isLoading ? <Icons.Loader /> : 'RESET PASSWORD'}</button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Right Dark Background - Empty Pattern Only */}
-      <div className="pattern-container advanced-bg">
-        <div className="blobs-container">
-          <div className="blob blob-1"></div>
-          <div className="blob blob-2"></div>
-          <div className="blob blob-3"></div>
-        </div>
+      {/* RIGHT SLIDING PANEL (SIGNUP) */}
+      <div 
+        className={`absolute top-0 right-0 h-full w-full md:w-[450px] md:min-w-[450px] bg-gradient-to-bl from-[#450a0a] to-[#7f1d1d] shadow-[-20px_0_50px_rgba(127,29,29,0.4)] z-[55] flex flex-col py-12 px-8 md:px-12 overflow-y-auto [&::-webkit-scrollbar]:hidden transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+          activePanel === 'signup' ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <h2 className="text-4xl md:text-5xl font-black text-amber-400 mb-2 tracking-tighter">JOIN US.</h2>
+        <p className="text-rose-200/70 mb-8 font-light">Create an account to become part of our network.</p>
+        
+        <form onSubmit={handleSignup} className="flex flex-col gap-6 mt-auto mb-auto">
+          <div className="grid grid-cols-2 gap-4">
+            <input name="firstName" value={formData.firstName} onChange={handleInputChange} className={inputStyle} type="text" placeholder="First Name" required />
+            <input name="lastName" value={formData.lastName} onChange={handleInputChange} className={inputStyle} type="text" placeholder="Last Name" required />
+          </div>
+          
+          <input name="fatherName" value={formData.fatherName} onChange={handleInputChange} className={inputStyle} type="text" placeholder="Father's Name" required />
+          
+          <div className="grid grid-cols-2 gap-4 items-end">
+            <div className="relative">
+              <DatePicker
+                value={formData.dob}
+                onChange={(value) => handleInputChange({ target: { name: 'dob', value } })}
+                required
+                variant="signup"
+                className={`w-full bg-transparent border-b border-rose-300/30 text-white py-2 focus:outline-none focus:border-amber-400 transition-colors placeholder:text-rose-200/50 text-sm md:text-base`}
+              />
+            </div>
+            <div className="relative">
+              <Dropdown
+                options={cityOptions}
+                value={formData.city}
+                onChange={handleInputChange}
+                placeholder="Select City"
+                name="city"
+                required
+                variant="signup"
+                className={`w-full bg-transparent border-b border-rose-300/30 text-white py-2 focus:outline-none focus:border-amber-400 transition-colors placeholder:text-rose-200/50 text-sm md:text-base`}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 items-end">
+            <div className="w-[70px] shrink-0 relative">
+              <Dropdown
+                options={COUNTRY_OPTIONS}
+                value={formData.countryCode}
+                onChange={handleInputChange}
+                placeholder="+91"
+                name="countryCode"
+                required
+                variant="signup"
+                className={`w-full bg-transparent border-b border-rose-300/30 text-white py-2 focus:outline-none focus:border-amber-400 transition-colors placeholder:text-rose-200/50 text-sm md:text-base`}
+              />
+            </div>
+            <input name="phone" value={formData.phone} onChange={handleInputChange} className={`${inputStyle} flex-1`} type="tel" placeholder="Phone (10 digits)" maxLength={10} required />
+          </div>
+
+          <input name="email" value={formData.email} onChange={handleInputChange} className={inputStyle} type="email" placeholder="Email Address" required />
+
+          <AnimatedButton variant="maroon" loading={isLoading} loadingText="CREATING ACCOUNT...">
+            CREATE ACCOUNT
+          </AnimatedButton>
+        </form>
+        
+        <p className="mt-8 text-center text-sm text-rose-200/60 font-light">
+          Already have an account? 
+          <button onClick={() => setActivePanel('login')} className="text-amber-400 hover:text-white font-bold ml-2 transition-colors">Log In</button>
+        </p>
       </div>
+
+      {/* Top Left Background Heading */}
+      <div className="absolute top-6 left-6 md:top-8 md:left-10 select-none pointer-events-none z-10">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-rose-900 leading-none tracking-tighter whitespace-nowrap" style={{ textShadow: generateLongShadow(10) }}>
+          7FS - 3i SERVICES
+        </h1>
+      </div>
+
+      {/* Main Carousel Area */}
+      <div className={`absolute inset-0 z-40 flex items-center justify-center transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+        (activePanel === 'login' || activePanel === 'forgot') ? 'md:translate-x-[225px]' : activePanel === 'signup' ? 'md:-translate-x-[225px]' : 'translate-x-0'
+      }`} style={{ perspective: '1200px' }}>
+        {currentCards.map((card, index) => {
+          const totalCards = currentCards.length;
+          let offset = ((index - activeIndex) % totalCards + totalCards) % totalCards;
+          if (offset > Math.floor(totalCards / 2)) offset -= totalCards;
+          
+          const absOffset = Math.abs(offset);
+          const scale = Math.max(0.4, 1 - absOffset * CONFIG.carousel.scaleDropoff);
+          const translateXpx = offset * CONFIG.carousel.spreadX * 10; // Convert to pixels (approx)
+          const translateY = absOffset * CONFIG.carousel.dropY; 
+          const zIndex = 50 - absOffset;
+          const opacity = Math.max(0, 1 - absOffset * 0.35);
+
+          return (
+            <div
+              key={card.id}
+              onClick={() => setActiveIndex(index)}
+              className="absolute cursor-pointer"
+              style={{
+                left: '50%',
+                top: '50%',
+                transition: `all ${CONFIG.carousel.transitionSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`,
+                transform: `translate(-50%, -50%) translateX(${translateXpx}px) translateY(${translateY}vh) scale(${scale})`,
+                zIndex: zIndex, 
+                opacity: opacity, 
+                pointerEvents: opacity === 0 ? 'none' : 'auto',
+              }}
+            >
+              <div 
+                className="relative overflow-hidden shadow-2xl group bg-black rounded-lg border border-white/10"
+                style={{
+                  width: `${CONFIG.carousel.cardWidth.lg}px`,
+                  height: `${CONFIG.carousel.cardHeight.lg}px`,
+                }}
+              >
+                <img src={card.img} alt={card.title} className="w-full h-full object-cover select-none transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100" draggable={false} />
+                <div className="absolute inset-0 bg-black/10 transition-opacity group-hover:bg-transparent" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Dynamic Sentence Footer */}
+      <div className={`absolute bottom-12 flex z-40 text-center px-4 drop-shadow-lg transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+        (activePanel === 'login' || activePanel === 'forgot') ? 'md:translate-x-[225px]' : activePanel === 'signup' ? 'md:-translate-x-[225px]' : 'translate-x-0'
+      }`}>
+        <p className="text-lg sm:text-2xl text-rose-700/70 font-light tracking-wide">
+          Empowering your business with <span className="font-black text-rose-900 uppercase transition-all duration-500 inline-block min-w-[150px]">{currentCards[activeIndex]?.keyword}</span>.
+        </p>
+      </div>
+
     </div>
+    </>
   );
 }

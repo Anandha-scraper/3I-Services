@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import '../styles/componentstyles/datepicker.css';
 
-const DatePicker = ({ value, onChange, required = false, disabled = false }) => {
+const DatePicker = ({ value, onChange, required = false, disabled = false, variant = 'default', className = '' }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -13,6 +13,8 @@ const DatePicker = ({ value, onChange, required = false, disabled = false }) => 
   const [openUpward, setOpenUpward] = useState(false);
   const calendarRef = useRef(null);
   const inputRef = useRef(null);
+
+  const isSignup = variant === 'signup';
 
   useEffect(() => {
     if (value) {
@@ -139,10 +141,10 @@ const DatePicker = ({ value, onChange, required = false, disabled = false }) => 
   const days = getDaysInMonth(currentMonth, currentYear);
 
   return (
-    <div className="heroui-datepicker" ref={calendarRef}>
+    <div className={`heroui-datepicker ${isSignup ? '!m-0 heroui-datepicker--maroon' : ''}`} ref={calendarRef}>
       <div
         ref={inputRef}
-        className="date-field-group"
+        className={className || `date-field-group ${isSignup ? '!bg-transparent !border-b !border-rose-300/30 !rounded-none !p-0 py-2' : ''}`}
         data-focused={showCalendar}
         data-disabled={disabled}
         onClick={() => {
@@ -152,13 +154,14 @@ const DatePicker = ({ value, onChange, required = false, disabled = false }) => 
             setShowMonthPicker(false);
           }
         }}
+        style={isSignup ? { paddingLeft: 0, paddingRight: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' } : {}}
       >
-        <Calendar size={20} className="form-input-icon" />
-        <div className="date-field-input">
+        {!isSignup && <Calendar size={20} className="form-input-icon" />}
+        <div className="date-field-input" style={isSignup ? { paddingLeft: 0, paddingRight: 0 } : {}}>
           {selectedDate ? (
-            <span className="date-segment">{formatDate(selectedDate)}</span>
+            <span className={`date-segment ${isSignup ? '!text-white' : ''}`}>{formatDate(selectedDate)}</span>
           ) : (
-            <span className="date-segment" data-placeholder>DD/MM/YYYY</span>
+            <span className={`date-segment ${isSignup ? '!text-rose-200/50 pl-0' : ''}`} data-placeholder style={isSignup ? { textAlign: 'left', paddingLeft: 0 } : {}}>DD/MM/YYYY</span>
           )}
         </div>
         <button
@@ -176,7 +179,7 @@ const DatePicker = ({ value, onChange, required = false, disabled = false }) => 
           }}
           aria-label="Open calendar"
         >
-          <Calendar size={20} className="date-picker-icon" />
+          <Calendar size={20} className={isSignup ? '!text-rose-200/50' : 'date-picker-icon'} />
         </button>
       </div>
 

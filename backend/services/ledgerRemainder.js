@@ -204,6 +204,26 @@ class LedgerRemainderService {
               }
             }
 
+            // Fetch latest comment from Ledger_logs if missing
+            if (!row.lastComments) {
+              try {
+                const logSnap = await db.collection('Ledger_logs')
+                  .where('ledger_id', '==', ledgerId)
+                  .orderBy('timestamp', 'desc')
+                  .limit(1)
+                  .get();
+                  
+                if (!logSnap.empty) {
+                  const logData = logSnap.docs[0].data();
+                  row.lastComments = logData.lastComments || logData.comments || '';
+                  console.log(`[getUpcomingRemainders] Fetched lastComments from Ledger_logs for ${ledgerId}`);
+                }
+              } catch (error) {
+                // If index is missing or anything else fails, we just silently ignore to not break the feed
+                console.error(`[getUpcomingRemainders] Error fetching comment for ${ledgerId}:`, error.message);
+              }
+            }
+
             console.log('[getUpcomingRemainders] ✓ Adding row:', { ledger_name: row.ledger_name, date: row.nextCallDate });
             rows.push(row);
           } else {

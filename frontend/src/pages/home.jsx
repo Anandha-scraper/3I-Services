@@ -492,8 +492,8 @@ function UserGreetingBanner({ user, onEmployeeCardClick, isEmployeeCardExpanded 
             <MapPin size={24} />
           </div>
           <div className="user-greeting-card__content">
-            <div className="user-greeting-card__label">City</div>
-            <div className="user-greeting-card__value">{city}</div>
+            <div className="user-greeting-card__label">{isAdmin ? 'Location' : 'City'}</div>
+            <div className="user-greeting-card__value">{isAdmin ? 'All' : city}</div>
           </div>
         </div>
 

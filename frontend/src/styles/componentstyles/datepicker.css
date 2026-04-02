@@ -446,3 +446,147 @@
     font-size: 0.9rem;
   }
 }
+
+/* ============================================ */
+/* MAROON/DARK THEME VARIANT */
+/* ============================================ */
+.heroui-datepicker--maroon .date-field-group {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(251, 207, 232, 0.3);
+  border-radius: 0;
+  padding: 0;
+  height: auto;
+  padding-bottom: 0.5rem;
+}
+
+.heroui-datepicker--maroon .date-field-group:hover {
+  border-color: rgba(251, 207, 232, 0.5);
+}
+
+.heroui-datepicker--maroon .date-field-group[data-focused="true"],
+.heroui-datepicker--maroon .date-field-group:focus-within {
+  border-color: #fbbf24;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.heroui-datepicker--maroon .form-input-icon {
+  color: rgba(251, 207, 232, 0.5);
+  position: static;
+  transform: none;
+  margin-right: 0.5rem;
+}
+
+.heroui-datepicker--maroon .date-field-input {
+  color: #ffffff;
+}
+
+.heroui-datepicker--maroon .date-segment {
+  color: #ffffff;
+}
+
+.heroui-datepicker--maroon .date-segment[data-placeholder] {
+  color: rgba(251, 207, 232, 0.5);
+}
+
+.heroui-datepicker--maroon .date-picker-trigger {
+  color: rgba(251, 207, 232, 0.6);
+}
+
+.heroui-datepicker--maroon .date-picker-trigger:hover {
+  color: #fbbf24;
+}
+
+/* Maroon theme popover - keep light for readability */
+.heroui-datepicker--maroon .date-picker-popover {
+  background-color: #450a0a;
+  border: 1px solid rgba(251, 207, 232, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  max-width: 250px;
+  min-width: 250px;
+  padding: 0.5rem;
+}
+
+.heroui-datepicker--maroon .year-picker-trigger {
+  color: #fbbf24;
+}
+
+.heroui-datepicker--maroon .year-picker-trigger:hover {
+  background-color: rgba(251, 191, 36, 0.1);
+}
+
+.heroui-datepicker--maroon .calendar-header button[slot="previous"],
+.heroui-datepicker--maroon .calendar-header button[slot="next"] {
+  color: rgba(251, 207, 232, 0.6);
+}
+
+.heroui-datepicker--maroon .calendar-header button[slot="previous"]:hover,
+.heroui-datepicker--maroon .calendar-header button[slot="next"]:hover {
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+
+.heroui-datepicker--maroon .date-calendar thead th {
+  color: rgba(251, 207, 232, 0.6);
+  padding: 0.25rem;
+}
+
+.heroui-datepicker--maroon .date-calendar button[role="gridcell"] {
+  color: rgba(255, 255, 255, 0.9);
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+}
+
+.heroui-datepicker--maroon .date-calendar button[role="gridcell"]:hover:not([data-disabled="true"]) {
+  background-color: rgba(251, 191, 36, 0.2);
+}
+
+.heroui-datepicker--maroon .date-calendar button[role="gridcell"][data-selected="true"] {
+  background-color: #fbbf24;
+  color: #450a0a;
+}
+
+.heroui-datepicker--maroon .date-calendar button[role="gridcell"][data-today="true"]:not([data-selected="true"]) {
+  border: 2px solid #fbbf24;
+}
+
+.heroui-datepicker--maroon .date-calendar button[role="gridcell"][data-disabled="true"] {
+  color: rgba(251, 207, 232, 0.3);
+}
+
+.heroui-datepicker--maroon .year-nav-btn,
+.heroui-datepicker--maroon .month-nav-btn {
+  color: rgba(251, 207, 232, 0.6);
+}
+
+.heroui-datepicker--maroon .year-nav-btn:hover,
+.heroui-datepicker--maroon .month-nav-btn:hover {
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+
+.heroui-datepicker--maroon .year-range-label,
+.heroui-datepicker--maroon .month-year-label {
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
+
+.heroui-datepicker--maroon .year-cell,
+.heroui-datepicker--maroon .month-cell {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.heroui-datepicker--maroon .year-cell:hover,
+.heroui-datepicker--maroon .month-cell:hover {
+  background-color: rgba(251, 191, 36, 0.2);
+}
+
+.heroui-datepicker--maroon .year-cell.selected,
+.heroui-datepicker--maroon .month-cell.selected {
+  background-color: #fbbf24;
+  color: #450a0a;
+}

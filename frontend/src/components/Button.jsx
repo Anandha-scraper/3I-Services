@@ -1,8 +1,34 @@
-import React, { useState } from 'react';
-import { ChevronDown, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import '../styles/componentstyles/Button.css';
 
+// Animated Submit Button with border animation
+export const AnimatedButton = ({
+  children,
+  loading = false,
+  loadingText = 'Loading...',
+  disabled = false,
+  className = '',
+  variant = 'dark', // 'dark' | 'light' | 'maroon'
+  fullWidth = true,
+  type = 'submit',
+  ...props
+}) => {
+  return (
+    <button
+      type={type}
+      className={`animated-btn animated-btn--${variant} ${fullWidth ? 'animated-btn--full' : ''} ${className}`}
+      disabled={disabled || loading}
+      {...props}
+    >
+      <span className="animated-btn__box">
+        {loading ? loadingText : children}
+      </span>
+    </button>
+  );
+};
 
+// Dropdown Component
 export const Dropdown = ({
   label,
   options,
@@ -11,9 +37,22 @@ export const Dropdown = ({
   placeholder,
   icon: Icon,
   required = false,
-  name
+  name,
+  className = '',
+  variant = 'default'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSelect = (option) => {
     onChange({
@@ -27,41 +66,43 @@ export const Dropdown = ({
 
   const selectedOption = options.find(option => option.value === value);
 
+  const isSignup = variant === 'signup';
+
   return (
-    <div className="form-group">
-      <label htmlFor={name}>{label}</label>
+    <div className={`form-group ${isSignup ? '!mb-0' : ''}`} ref={dropdownRef}>
+      {label && <label htmlFor={name} className={isSignup ? 'text-xs text-rose-200/60 mb-1 block' : ''}>{label}</label>}
       <div style={{ position: 'relative' }}>
         {Icon && <Icon className="form-input-icon" size={20} />}
         <div
-          className="form-input dropdown-trigger"
+          className={className || `form-input dropdown-trigger ${isSignup ? '!bg-transparent !border-b !border-rose-300/30 !text-white !p-0 !py-2 focus:!border-amber-400 !shadow-none !rounded-none' : ''}`}
           onClick={() => setIsOpen(!isOpen)}
           style={{
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingRight: '1rem',
-            backgroundColor: '#fafafa'
+            ...(isSignup ? {} : { paddingRight: '1rem', backgroundColor: '#fafafa' })
           }}
         >
-          <span style={{ color: selectedOption ? '#1f2937' : '#9ca3af' }}>
-            {selectedOption ? selectedOption.label : placeholder}
+          <span style={isSignup ? { color: selectedOption ? 'white' : 'rgba(254, 205, 211, 0.5)' } : { color: selectedOption ? '#1f2937' : '#9ca3af' }}>
+            {selectedOption ? (selectedOption.shortLabel || selectedOption.label) : placeholder}
           </span>
           <ChevronDown
-            size={16}
+            size={isSignup ? 20 : 16}
             style={{
               transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease'
+              transition: 'transform 0.2s ease',
+              color: isSignup ? 'white' : '#9ca3af'
             }}
           />
         </div>
 
         {isOpen && (
-          <div className="dropdown-menu">
+          <div className={`dropdown-menu ${isSignup ? '!bg-rose-950 !border !border-rose-300/30 !text-white !right-auto min-w-full whitespace-nowrap z-[100]' : ''}`}>
             {options.map((option) => (
               <div
                 key={option.value}
-                className="dropdown-item"
+                className={`dropdown-item ${isSignup ? 'hover:!bg-rose-900 !text-white px-3 py-2' : ''}`}
                 onClick={() => handleSelect(option)}
               >
                 {option.label}
@@ -111,6 +152,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   );
 };
 
+// Basic Button
 export const Button = ({ children, variant = 'primary', size = 'medium', className = '', ...props }) => {
   return (
     <button className={`btn btn-${variant} btn-${size} ${className}`} {...props}>
@@ -119,7 +161,7 @@ export const Button = ({ children, variant = 'primary', size = 'medium', classNa
   );
 };
 
-// Gradient Submit Button for Forms
+// Legacy Gradient Submit Button (kept for backward compatibility)
 export const GradientSubmitButton = ({
   children,
   icon: Icon,
@@ -130,14 +172,15 @@ export const GradientSubmitButton = ({
   ...props
 }) => {
   return (
-    <button
-      type="submit"
-      className={`gradient-submit-btn ${className}`}
-      disabled={disabled || loading}
+    <AnimatedButton
+      loading={loading}
+      loadingText={loadingText}
+      disabled={disabled}
+      className={className}
+      variant="maroon"
       {...props}
     >
-      {Icon && <Icon className="gradient-submit-btn-icon" size={18} />}
-      <span>{loading ? loadingText : children}</span>
-    </button>
+      {children}
+    </AnimatedButton>
   );
 };
