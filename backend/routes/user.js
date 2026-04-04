@@ -6,6 +6,8 @@ const userController = require('../controllers/user');
 
 // Protected routes
 router.get('/profile', authenticate, userController.getProfile);
+router.put('/profile', authenticate, userController.updateProfile);
+router.put('/password', authenticate, userController.changePassword);
 
 // Admin routes
 router.get('/all', authenticate, adminOnly, userController.getAll);

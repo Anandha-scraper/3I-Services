@@ -85,8 +85,8 @@ function extractUniqueLedgerRemainders(records) {
       record.ledger_id,
       record.ledger,
       record.city,
-      0,  // debit - initialize to 0
-      0,  // credit - initialize to 0
+      record.debit,  // debit from record
+      record.credit,  // credit from record
       null,  // nextCallDate - initialize as empty for user to populate
       null,  // comments
       record.group,  // group

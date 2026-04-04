@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 import '../styles/componentstyles/Button.css';
 
 // Animated Submit Button with border animation
@@ -162,6 +162,22 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       >
         Next
       </button>
+    </div>
+  );
+};
+
+// Search Bar
+export const SearchBar = ({ value, onChange, placeholder = 'Search...', className = '' }) => {
+  return (
+    <div className={`search-bar ${className}`}>
+      <Search size={20} className="search-bar-icon" />
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className="search-bar-input"
+      />
     </div>
   );
 };

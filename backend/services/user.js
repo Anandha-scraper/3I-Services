@@ -116,6 +116,13 @@ class UserService {
   async checkEmailExists(email) {
     return await this.findByEmail(email);
   }
+
+  async updateUser(userId, data) {
+    const user = await this.findByUserId(userId);
+    if (!user) throw new Error('User not found');
+    await this.collection.doc(user.id).update({ ...data, updatedAt: new Date().toISOString() });
+    return { id: user.id, ...user, ...data };
+  }
 }
 
 module.exports = new UserService();

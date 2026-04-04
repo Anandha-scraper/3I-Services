@@ -186,10 +186,15 @@
   align-items: center;
 }
 
-.sidebar__logout-wrap {
-  margin-top: auto;
+.sidebar__bottom {
+  flex-shrink: 0;
   border-top: 1px solid var(--color-neutral-gray-100);
-  padding: 1rem 0.875rem;
+  padding: 0.25rem 0;
+}
+
+.sidebar__logout-wrap {
+  border-top: 1px solid var(--color-neutral-gray-100);
+  padding: 0.75rem 0.875rem;
   flex-shrink: 0;
 }
 

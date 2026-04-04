@@ -40,14 +40,14 @@ const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, d
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 
         .stylish-font {
-          font-family: 'Playfair Display', serif;
-          font-style: italic;
-          font-weight: 900;
-          letter-spacing: -0.02em;
-          line-height: 1.1;
+          font-family: 'Space Grotesk', sans-serif;
+          font-style: normal;
+          font-weight: 700;
+          letter-spacing: -0.04em;
+          line-height: 1;
         }
         .loader-exit {
           transform: translateY(-100%);
@@ -101,7 +101,7 @@ const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, d
             <span className="text-xs md:text-sm text-zinc-500 uppercase tracking-widest font-sans">
               {isDataLoading ? 'Loading Data' : 'System Initialization'}
             </span>
-            <span className="text-4xl md:text-6xl font-light tabular-nums stylish-font not-italic text-zinc-900">
+            <span className="text-4xl md:text-6xl tabular-nums stylish-font text-zinc-900">
               {isDataLoading && progress === 100 ? '100' : progress}%
             </span>
           </div>

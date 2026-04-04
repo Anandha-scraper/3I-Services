@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiUrl } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
+import { SearchBar } from '../components/Button';
 import '../styles/pagestyles/view-notify.css';
 
 export default function NotifyPage() {
@@ -10,6 +11,7 @@ export default function NotifyPage() {
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   const fetchLedgerRemainders = useCallback(async () => {
@@ -73,17 +75,31 @@ export default function NotifyPage() {
         }
       },
     },
-    {
-      key: 'lastComments',
-      label: 'Comments',
-      width: '400px',
-      align: 'center',
-      render: (value) => {
-        if (!value) return '—';
-        return value.length > 50 ? value.substring(0, 50) + '...' : value;
-      },
-    },
   ], []);
+
+  const filteredLedgers = useMemo(() => {
+    if (!searchTerm.trim()) return ledgers;
+    const lower = searchTerm.toLowerCase().trim();
+    return ledgers.filter(l => {
+      if (l.ledger_name && l.ledger_name.toLowerCase().includes(lower)) return true;
+      if (l.nextCallDate) {
+        try {
+          const date = new Date(l.nextCallDate);
+          const formatted = date.toLocaleDateString('en-IN', {
+            year: 'numeric', month: 'short', day: 'numeric',
+          }).toLowerCase();
+          if (formatted.includes(lower)) return true;
+          const parts = [
+            date.getFullYear().toString(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0'),
+          ];
+          if (parts.some(p => p.includes(lower))) return true;
+        } catch {}
+      }
+      return false;
+    });
+  }, [ledgers, searchTerm]);
 
   const handleRowClick = (ledger) => {
     navigate('/view-notify-detail', { state: { row: ledger } });
@@ -102,8 +118,16 @@ export default function NotifyPage() {
       {error && <div className="notify-error">⚠️ {error}</div>}
 
       <div className="notify-header">
-        <h1>Ledger Notifications</h1>
-        <p className="notify-subtitle">Recent ledger updates and changes</p>
+        <div className="notify-header-text">
+          <h1>Ledger Notifications</h1>
+          <p className="notify-subtitle">Recent ledger updates and changes</p>
+        </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by ledger name or date (e.g. Apr, 2026, 26)..."
+          className="notify-search"
+        />
       </div>
 
       <div className="notify-table-section">
@@ -112,7 +136,7 @@ export default function NotifyPage() {
         ) : (
           <div className="notify-table-container">
             <div className="notify-table-wrapper">
-              {ledgers.length === 0 ? (
+              {filteredLedgers.length === 0 ? (
                 <div className="notify-empty">No ledger updates found</div>
               ) : (
                 <table className="notify-table">
@@ -126,7 +150,7 @@ export default function NotifyPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ledgers.map((ledger, index) => (
+                    {filteredLedgers.map((ledger, index) => (
                       <tr
                         key={ledger.id || index}
                         className="notify-table-row"

@@ -61,10 +61,17 @@ class LedgerRemainderService {
             ...remainder,
             // Preserve existing nextCallDate if user has set it
             nextCallDate: existingData.nextCallDate !== undefined ? existingData.nextCallDate : (remainder.nextCallDate || ''),
+            // Preserve existing debit/credit values set by outstanding upload
+            debit: (existingData.debit !== undefined && existingData.debit !== null && existingData.debit !== 0)
+              ? existingData.debit
+              : (remainder.debit || 0),
+            credit: (existingData.credit !== undefined && existingData.credit !== null && existingData.credit !== 0)
+              ? existingData.credit
+              : (remainder.credit || 0),
             updatedAt: importedAt,
             sourceFileName: fileName || null,
           };
-          console.log('[upsertFromExcelRecords] Updating record:', remainder.ledger_id, 'preserving nextCallDate:', updateData.nextCallDate);
+          console.log('[upsertFromExcelRecords] Updating record:', remainder.ledger_id, 'preserving nextCallDate:', updateData.nextCallDate, 'debit:', updateData.debit, 'credit:', updateData.credit);
           batch.update(ref, updateData);
           updated += 1;
         }

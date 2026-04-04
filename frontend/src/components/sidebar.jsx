@@ -1,4 +1,4 @@
-import { Home, FileSpreadsheet, Table2, LogOut, UploadCloud } from 'lucide-react';
+import { Home, FileSpreadsheet, Table2, LogOut, UploadCloud, UserCircle } from 'lucide-react';
 import '../styles/componentstyles/sidebar.css';
 import threeiLogo from '../images/3iLogo.svg';
 
@@ -63,6 +63,22 @@ export default function Sidebar({
             </button>
           ))}
         </nav>
+
+        <div className="sidebar__bottom">
+          <button
+            type="button"
+            className={`sidebar__nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+            onClick={() => {
+              onSelectTab('profile');
+              if (isMobile) onCloseMobile?.();
+            }}
+          >
+            <span className="sidebar__nav-icon">
+              <UserCircle size={20} />
+            </span>
+            <span className="sidebar__nav-label">My Profile</span>
+          </button>
+        </div>
 
         <div className="sidebar__logout-wrap">
           <button type="button" className="sidebar__logout-btn" onClick={onLogout}>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
@@ -11,32 +11,13 @@ function formatCurrency(value) {
   return num.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
-function formatCell(value) {
-  if (value == null || value === '') return '—';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
-}
-
-function formatDate(dateValue) {
-  if (!dateValue) return '—';
-  try {
-    const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
-    if (isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
 
 export default function ViewOutstandingsPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
   const [error, setError] = useState(null);
+
 
   const load = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -76,12 +57,6 @@ export default function ViewOutstandingsPage() {
       align: 'center',
     },
     {
-      key: 'group',
-      label: 'Group Name',
-      width: '150px',
-      align: 'center',
-    },
-    {
       key: 'debit',
       label: 'Debit',
       width: '150px',
@@ -96,11 +71,10 @@ export default function ViewOutstandingsPage() {
       render: (item) => formatCurrency(item.credit),
     },
     {
-      key: 'lastTransactionDate',
-      label: 'Next Call Date',
-      width: '200px',
+      key: 'city',
+      label: 'City',
+      width: '150px',
       align: 'center',
-      render: (item) => formatDate(item.lastTransactionDate),
     },
   ], []);
 

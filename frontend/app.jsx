@@ -11,6 +11,7 @@ import NotifyDetailPage from './src/pages/view-notify-detail';
 import ViewLogPage from './src/pages/view-log';
 import ViewOutstandingsPage from './src/pages/view-outstandings';
 import ViewModifyCallsPage from './src/pages/view-modify-calls';
+import UserProfilePage from './src/pages/userprofile';
 import Dashboard from './src/components/Dashboard';
 
 function ProtectedRoute({ children, activeTab }) {
@@ -117,6 +118,15 @@ function App() {
             element={
               <ProtectedRoute activeTab="modify-calls">
                 <ViewModifyCallsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute activeTab="profile">
+                <UserProfilePage />
               </ProtectedRoute>
             }
           />

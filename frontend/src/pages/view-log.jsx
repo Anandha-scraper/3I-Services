@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { apiUrl } from '../utils/api';
-import { Button } from '../components/Button';
+import { Button, SearchBar } from '../components/Button';
 import PageLoader from '../components/loading';
 import '../styles/pagestyles/view-log.css';
 
@@ -226,19 +226,12 @@ export default function ViewLogPage() {
       </div>
 
       <div className="view-log-filters">
-        <div className="view-log-search">
-          <Search size={20} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search by ledger name, ID, group, or comments..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="search-input"
-          />
-        </div>
+        <SearchBar
+          className="view-log-search"
+          placeholder="Search by ledger name, ID, group, or comments..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+        />
         <div className="view-log-toggles">
           <Button 
             variant={filterType === 'all' ? 'primary' : 'outline'} 
