@@ -20,6 +20,8 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
     if (value) {
       const [year, month, day] = value.split('-');
       setSelectedDate(new Date(year, month - 1, day));
+    } else {
+      setSelectedDate(null);
     }
   }, [value]);
 
@@ -40,7 +42,7 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
       const rect = inputRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      const calendarHeight = 350; // Approximate calendar height
+      const calendarHeight = 300; // Approximate rounded down calendar height
 
       // If not enough space below and more space above, open upward
       setOpenUpward(spaceBelow < calendarHeight && spaceAbove > spaceBelow);
@@ -150,7 +152,7 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
         onClick={() => {
           if (!disabled) {
             setShowCalendar(true);
-            setShowYearPicker(false);
+            setShowYearPicker(true);
             setShowMonthPicker(false);
           }
         }}
@@ -172,7 +174,7 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
             if (!disabled) {
               setShowCalendar(!showCalendar);
               if (!showCalendar) {
-                setShowYearPicker(false);
+                setShowYearPicker(true);
                 setShowMonthPicker(false);
               }
             }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
 import '../styles/pagestyles/view-outstandings.css';
@@ -20,18 +20,10 @@ export default function ViewOutstandingsPage() {
 
 
   const load = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Not logged in.');
-      setLoading(false);
-      return;
-    }
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/ledger-remainder?limit=1000'), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch('/api/ledger-remainder?limit=1000');
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.message || data.error || 'Failed to load');
@@ -57,6 +49,12 @@ export default function ViewOutstandingsPage() {
       align: 'center',
     },
     {
+      key: 'city',
+      label: 'City',
+      width: '150px',
+      align: 'center',
+    },
+    {
       key: 'debit',
       label: 'Debit',
       width: '150px',
@@ -70,12 +68,7 @@ export default function ViewOutstandingsPage() {
       align: 'center',
       render: (item) => formatCurrency(item.credit),
     },
-    {
-      key: 'city',
-      label: 'City',
-      width: '150px',
-      align: 'center',
-    },
+
   ], []);
 
   return (
@@ -91,7 +84,7 @@ export default function ViewOutstandingsPage() {
       {error && <div className="outstandings-error">{error}</div>}
       
       <div className="outstandings-header">
-        <h1>Ledger Remainders</h1>
+        <h1>Outstanding Data : </h1>
       </div>
 
       <div className="outstandings-table-section">

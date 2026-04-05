@@ -80,20 +80,14 @@ exports.getDashboard = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log('[DELETE-CONTROLLER] Received delete request for userId:', userId);
     
     if (!userId) {
-      console.error('[DELETE-CONTROLLER] No userId provided');
       return res.status(400).json({ message: 'User ID is required' });
     }
     
-    console.log(`[DELETE-CONTROLLER] Admin requesting to delete user: ${userId}`);
     const result = await userService.deleteUser(userId);
-    console.log('[DELETE-CONTROLLER] Deletion result:', result);
-    
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (e) {
-    console.error('[DELETE-CONTROLLER] Error:', e.message, e.stack);
     res.status(500).json({ message: 'Failed to delete user', error: e.message });
   }
 };

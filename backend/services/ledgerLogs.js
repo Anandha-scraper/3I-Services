@@ -83,8 +83,13 @@ class LedgerLogsService {
     try {
       const raw = opts.limit != null ? parseInt(String(opts.limit), 10) : 500;
       const limit = Math.min(Math.max(Number.isNaN(raw) ? 500 : raw, 1), 2000);
+      const city = opts.city ? String(opts.city).trim().toLowerCase() : null;
 
-      const snapshot = await this.collection
+      let query = this.collection;
+      if (city) {
+        query = query.where('city', '==', city);
+      }
+      const snapshot = await query
         .orderBy('timestamp', 'desc')
         .limit(limit)
         .get();

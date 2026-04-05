@@ -4,7 +4,8 @@ const { processCustomerData } = require('../utils/customerValidator');
 
 exports.list = async (req, res) => {
   try {
-    const rows = await ledgerRemainderService.list({ limit: req.query.limit });
+    const cityFilter = req.user.role === 'admin' ? null : (req.user.city || null);
+    const rows = await ledgerRemainderService.list({ limit: req.query.limit, city: cityFilter });
     
     // Log first row to see what fields are being returned
     if (rows.length > 0) {
@@ -31,7 +32,8 @@ exports.list = async (req, res) => {
 exports.upcoming = async (req, res) => {
   try {
     const days = parseInt(req.query.days || '7', 10);
-    const rows = await ledgerRemainderService.getUpcomingRemainders({ days, limit: req.query.limit });
+    const cityFilter = req.user.role === 'admin' ? null : (req.user.city || null);
+    const rows = await ledgerRemainderService.getUpcomingRemainders({ days, limit: req.query.limit, city: cityFilter });
     
     console.log('[UPCOMING] Returning', rows.length, 'records');
     if (rows.length > 0) {
@@ -158,6 +160,7 @@ exports.update = async (req, res) => {
         previous_credit: ledgerData.credit || 0,
         operation: 'update',
         userId,
+        city: ledgerData.city || '',
       };
 
       // Add customer info to log if available

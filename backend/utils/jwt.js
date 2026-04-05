@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET ;
-const JWT_EXPIRES_IN = '7d';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
-const generateToken = (userId, email, role = 'employee', firstName = '') => {
+const generateToken = (userId, email, role = 'employee', firstName = '', city = '') => {
   return jwt.sign(
-    { userId, email, role, firstName, iat: Math.floor(Date.now() / 1000) },
+    { userId, email, role, firstName, city, iat: Math.floor(Date.now() / 1000) },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );

@@ -7,3 +7,15 @@ export function apiUrl(path) {
   const p = path.startsWith('/') ? path : `/${path}`;
   return base ? `${base}${p}` : p;
 }
+
+/**
+ * Fetch wrapper that always sends cookies (credentials: 'include').
+ * Fires a global 'auth:unauthorized' event on 401 so AuthContext can auto-logout.
+ */
+export async function apiFetch(path, options = {}) {
+  const res = await fetch(apiUrl(path), { credentials: 'include', ...options });
+  if (res.status === 401) {
+    window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+  }
+  return res;
+}

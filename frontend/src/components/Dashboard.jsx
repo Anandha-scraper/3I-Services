@@ -8,7 +8,7 @@ import '../styles/componentstyles/Dashboard.css';
 export default function Dashboard({ activeTab, children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -26,10 +26,8 @@ export default function Dashboard({ activeTab, children }) {
   const toggleSidebar = () => setIsSidebarOpen((o) => !o);
   const closeMobileSidebar = () => setIsSidebarOpen(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    logout();
+  const handleLogout = async () => {
+    await logout(); // calls backend to invalidate session + clears local state
     navigate('/login');
   };
 
@@ -47,6 +45,7 @@ export default function Dashboard({ activeTab, children }) {
         activeTab={activeTab}
         onSelectTab={handleTabChange}
         onLogout={handleLogout}
+        userRole={user?.role}
       />
 
       <main className="common-dashboard-main">

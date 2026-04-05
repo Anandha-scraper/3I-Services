@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
-import { Pagination } from '../components/Button';
+import { Pagination, SearchBar, Button, ExpandColumnsButton } from '../components/Button';
 import PageLoader from '../components/loading';
 import '../styles/pagestyles/view-master.css';
 
@@ -18,21 +18,21 @@ export default function ViewDataPage() {
   const [showLoader, setShowLoader] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isColumnsExpanded, setIsColumnsExpanded] = useState(false);
   const rowsPerPage = 15;
 
+  // Define default visible columns
+  const defaultVisibleColumns = useMemo(() => 
+    ['ledger', 'city', 'address1', 'address2', 'address3', 'pin', 'email', 'contact', 'phone1', 'phone2', 'mobile', 'tin'],
+    []
+  );
+
   const load = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Not logged in.');
-      setLoading(false);
-      return;
-    }
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/excel/master?limit=1000'), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch('/api/excel/master?limit=1000');
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.message || data.error || 'Failed to load');
@@ -94,8 +94,11 @@ export default function ViewDataPage() {
   }), []);
 
   const tableColumns = useMemo(
-    () =>
-      columns.map((key) => {
+    () => {
+      // Filter columns based on expansion state
+      const visibleCols = isColumnsExpanded ? columns : columns.filter(col => defaultVisibleColumns.includes(col));
+      
+      return visibleCols.map((key) => {
         const config = columnConfig[key] || {};
         return {
           key,
@@ -104,8 +107,9 @@ export default function ViewDataPage() {
           width: config.width || '200px',
           render: (item) => formatCell(item[key]),
         };
-      }),
-    [columns, columnConfig]
+      });
+    },
+    [columns, columnConfig, isColumnsExpanded, defaultVisibleColumns]
   );
 
   const tableMinWidth = useMemo(
@@ -120,12 +124,24 @@ export default function ViewDataPage() {
     [tableColumns]
   );
 
+  // Filter rows by search query across all visible columns
+  const filteredRows = useMemo(() => {
+    if (!searchQuery.trim()) return rows;
+    const q = searchQuery.trim().toLowerCase();
+    return rows.filter(row =>
+      columns.some(key => {
+        const val = row[key];
+        return val != null && String(val).toLowerCase().includes(q);
+      })
+    );
+  }, [rows, columns, searchQuery]);
+
   // Pagination logic
-  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const currentRows = useMemo(() => {
     const startIndex = (currentPage - 1) * rowsPerPage;
-    return rows.slice(startIndex, startIndex + rowsPerPage);
-  }, [rows, currentPage, rowsPerPage]);
+    return filteredRows.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredRows, currentPage, rowsPerPage]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -136,7 +152,7 @@ export default function ViewDataPage() {
   const showTable = !loading && !error && columns.length > 0;
 
   return (
-    <div className="viewdata-page">
+    <div className="view-master-page">
       {showLoader && (
         <PageLoader
           pageName="Master"
@@ -146,17 +162,40 @@ export default function ViewDataPage() {
       )}
 
       {error && (
-        <p className="viewdata-error" role="alert">
+        <p className="view-master-error" role="alert">
           {error}
         </p>
       )}
 
       {showTable && (
-        <div className="viewdata-table-section">
+        <div className="view-master-table-section">
+          <div className="view-master-toolbar">
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1 }}>
+              <SearchBar
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                placeholder="Search master data..."
+              />
+              {searchQuery && (
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => { setSearchQuery(''); setCurrentPage(1); }}
+                >
+                  Show All
+                </Button>
+              )}
+            </div>
+            <ExpandColumnsButton
+              isExpanded={isColumnsExpanded}
+              onClick={() => setIsColumnsExpanded(!isColumnsExpanded)}
+              className="view-master-expand-btn"
+            />
+          </div>
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingBottom: '0' }}>
             <Table
-              containerClassName="viewdata-reusable-table-container"
-              tableClassName="viewdata-reusable-table"
+              containerClassName="view-master-reusable-table-container"
+              tableClassName="view-master-reusable-table"
               columns={tableColumns}
               data={currentRows}
               minWidth={tableMinWidth}

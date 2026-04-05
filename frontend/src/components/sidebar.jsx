@@ -1,6 +1,6 @@
 import { Home, FileSpreadsheet, Table2, LogOut, UploadCloud, UserCircle } from 'lucide-react';
 import '../styles/componentstyles/sidebar.css';
-import threeiLogo from '../images/3iLogo.svg';
+import threeiLogo from '../images/logo.svg';
 
 const NAV_ITEMS = [
   { id: 'home', icon: Home, label: 'Home' },
@@ -17,8 +17,12 @@ export default function Sidebar({
   activeTab,
   onSelectTab,
   onLogout,
-  logoTitle = '7FS',
+  logoTitle = '3i Services',
+  userRole,
 }) {
+  const visibleItems = userRole === 'admin'
+    ? NAV_ITEMS
+    : NAV_ITEMS.filter(item => item.id !== 'excel');
   return (
     <div className="sidebar-root">
       <div
@@ -46,7 +50,7 @@ export default function Sidebar({
         </div>
 
         <nav className="sidebar__nav" aria-label="Main">
-          {NAV_ITEMS.map(({ id, icon: Icon, label }) => (
+          {visibleItems.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               type="button"

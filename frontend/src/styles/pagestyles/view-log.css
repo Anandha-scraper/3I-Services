@@ -38,7 +38,10 @@
   background: white;
   padding: 1.25rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Added slight shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+  position: relative;
+  z-index: 20;
 }
 
 .view-log-search {
@@ -152,6 +155,83 @@
   text-align: center;
   font-size: 0.95rem;
   color: #475569;
+}
+
+/* Compact DatePicker for log filters */
+.view-log-date-filters .heroui-datepicker {
+  width: auto;
+}
+
+.view-log-datepicker {
+  position: relative;
+  width: 130px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  padding: 0 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.view-log-datepicker:hover {
+  border-color: #9ca3af;
+}
+
+.view-log-datepicker[data-focused="true"] {
+  border-color: var(--color-info, #2A4759);
+  box-shadow: 0 0 0 2px rgba(42, 71, 89, 0.1);
+}
+
+.view-log-datepicker[data-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}
+
+.view-log-datepicker .date-field-input {
+  font-size: 0.78rem;
+}
+
+.view-log-datepicker .date-segment {
+  font-size: 0.78rem;
+}
+
+.view-log-datepicker .date-picker-trigger {
+  padding: 0;
+}
+
+.view-log-datepicker .date-picker-trigger svg {
+  width: 14px;
+  height: 14px;
+}
+
+.view-log-datepicker .form-input-icon {
+  display: none;
+}
+
+/* Ensure popover opens below and above table */
+.view-log-date-filters .date-picker-popover {
+  z-index: 100;
+  animation: fadeInDown 0.15s ease-out;
+}
+.view-log-date-filters .date-picker-popover.open-upward {
+  animation: fadeInUp 0.15s ease-out;
+  transform-origin: bottom center;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 768px) {

@@ -34,7 +34,7 @@ export default function ViewPage() {
   const handleCardClick = (cardId) => {
     setActiveCard(cardId);
     if (cardId === 'master') {
-      navigate('/viewdata');
+      navigate('/view-master');
     } else if (cardId === 'outstanding') {
       navigate('/view-outstandings');
     } else if (cardId === 'log') {

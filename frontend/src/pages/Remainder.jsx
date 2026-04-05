@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar, FileText, MapPin, MessageSquare, AlertCircle, RefreshCw, ChevronRight, ArrowRight, TrendingDown, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import Alert from '../components/Alert';
 import '../styles/pagestyles/Remainder.css';
 
@@ -34,10 +34,7 @@ function getDayLabel(offset) {
 }
 
 async function fetchUpcoming(days = 7, limit = '') {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Authentication required');
-  const url = apiUrl(`/api/ledger-remainder/upcoming?days=${days}${limit ? `&limit=${limit}` : ''}`);
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await apiFetch(`/api/ledger-remainder/upcoming?days=${days}${limit ? `&limit=${limit}` : ''}`);
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.message || json.error || 'Failed to load reminders');
   return json;

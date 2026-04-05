@@ -11,6 +11,7 @@ const LEDGER_LOGS_FIELDS = [
   'operation', // 'insert' or 'update'
   'timestamp',
   'createdByUserId',
+  'city',
 ];
 
 const LEDGER_LOGS_COLLECTION_NAME = 'Ledger_logs';
@@ -30,6 +31,7 @@ function createLedgerLogEntry({
   previous_credit,
   operation,
   userId,
+  city,
 }) {
   return {
     ledger_id: String(ledger_id || '').trim(),
@@ -44,6 +46,7 @@ function createLedgerLogEntry({
     operation: String(operation || 'insert').trim(),
     timestamp: new Date().toISOString(),
     createdByUserId: userId || null,
+    city: String(city || '').trim().toLowerCase(),
   };
 }
 

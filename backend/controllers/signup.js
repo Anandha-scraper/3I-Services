@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
 
     // Create request
     console.log('[INFO] Creating registration request...');
-    const newRequest = await registrationService.createRequest({ firstName, lastName, fatherName, dob, email, phone: phone || '', city: city || '' });
+    const newRequest = await registrationService.createRequest({ firstName, lastName, fatherName, dob, email, phone: phone || '', city: (city || '').toLowerCase().trim() });
     console.log('[SUCCESS] Registration request created with ID:', newRequest.id);
 
     // Notify admin (fire and forget with error logging)
@@ -136,7 +136,7 @@ exports.approve = async (req, res) => {
       dob: request.dob,
       email: request.email,
       phone: request.phone || '',
-      city: request.city || '',
+      city: (request.city || '').toLowerCase().trim(),
       userId: generatedUserId,
       role: 'employee'
     });

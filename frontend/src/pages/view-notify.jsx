@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
 import { SearchBar } from '../components/Button';
@@ -16,16 +16,7 @@ export default function NotifyPage() {
 
   const fetchLedgerRemainders = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Not logged in.');
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(apiUrl('/api/ledger-remainder?limit=500'), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch('/api/ledger-remainder?limit=500');
 
       if (!res.ok) {
         throw new Error('Failed to load ledger remainders');

@@ -1,4 +1,4 @@
-.viewdata-page {
+.view-master-page {
   /* Local Color Definitions */
   --color-secondary-yellow: #DDDDDD;
   --color-neutral-dark: #1a1a1a;
@@ -18,7 +18,7 @@
   overflow: hidden;
 }
 
-.viewdata-error {
+.view-master-error {
   margin: 1rem;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
@@ -27,8 +27,28 @@
   font-size: 0.875rem;
 }
 
+.view-master-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  flex-shrink: 0;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.view-master-toolbar .search-bar {
+  flex: 1;
+  max-width: 360px;
+}
+
+.view-master-expand-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* Table wrapper: fill remaining height, reuse component layout */
-.viewdata-table-section {
+.view-master-table-section {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -38,7 +58,7 @@
   height: 100%;
 }
 
-.viewdata-reusable-table-container {
+.view-master-reusable-table-container {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -51,12 +71,12 @@
 }
 
 /* Data-dense tweaks on top of Table.css */
-.viewdata-reusable-table {
+.view-master-reusable-table {
   table-layout: auto;
   font-size: 0.95rem;
 }
 
-.viewdata-reusable-table th {
+.view-master-reusable-table th {
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -67,15 +87,15 @@
   padding: 1.29rem 1rem;
 }
 
-.viewdata-reusable-table.table-gradient-header thead tr {
+.view-master-reusable-table.table-gradient-header thead tr {
   background: linear-gradient(135deg, var(--color-accent-light-green) 0%, var(--color-neutral-gray-100) 100%);
 }
 
-.viewdata-reusable-table.table-gradient-header th {
+.view-master-reusable-table.table-gradient-header th {
   background: inherit;
 }
 
-.viewdata-reusable-table td {
+.view-master-reusable-table td {
   white-space: nowrap;
   color: var(--color-neutral-dark);
   overflow: hidden;
@@ -83,7 +103,7 @@
   padding: 1.29rem 1rem;
 }
 
-.viewdata-reusable-table thead th:first-child {
+.view-master-reusable-table thead th:first-child {
   z-index: 2;
 }
 

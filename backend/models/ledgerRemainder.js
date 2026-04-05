@@ -30,7 +30,7 @@ function createLedgerRemainderEntry(ledger_id, ledger_name, city, debit = 0, cre
   const entry = {
     ledger_id: String(ledger_id || '').trim(),
     ledger_name: String(ledger_name || '').trim(),
-    city: String(city || '').trim(),
+    city: String(city || '').trim().toLowerCase(),
     debit: parseFloat(debit || 0) || 0,
     credit: parseFloat(credit || 0) || 0,
   };

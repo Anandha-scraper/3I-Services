@@ -1,8 +1,18 @@
 const { auth } = require('../config/firebase');
 const { generateToken } = require('../utils/jwt');
+const { setSession, deleteSession } = require('../utils/sessionCache');
 const userService = require('../services/user');
 const activityService = require('../services/activity');
 const https = require('https');
+const ms = require('ms');
+
+const EXPIRES_IN = process.env.JWT_EXPIRES_IN ;
+const COOKIE_OPTIONS = {
+  httpOnly: true,                                        // not accessible via JS (XSS protection)
+  secure: process.env.NODE_ENV === 'production',         // HTTPS only in production
+  sameSite: 'strict',                                    // CSRF protection
+  maxAge: ms(EXPIRES_IN),                               // matches JWT expiry (ms in milliseconds)
+};
 
 // Login user
 exports.login = async (req, res) => {
@@ -37,22 +47,26 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = generateToken(user.userId, user.email, user.role || 'employee', user.firstName || '');
+    const token = generateToken(user.userId, user.email, user.role || 'employee', user.firstName || '', (user.city || '').toLowerCase().trim());
+    setSession(user.userId, token); // store in session cache — overwrites any prior session
 
     // Record login activity (non-blocking)
     activityService.recordLogin(user.userId).catch(err => {
       console.warn('Failed to record login activity:', err.message);
     });
 
+    // Set token as HttpOnly cookie
+    res.cookie('token', token, COOKIE_OPTIONS);
+
     res.status(200).json({
       message: 'Login successful',
-      token,
       user: {
         userId: user.userId,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role || 'employee'
+        role: user.role || 'employee',
+        city: (user.city || '').toLowerCase().trim()
       }
     });
 
@@ -72,6 +86,18 @@ exports.getUserSessions = async (req, res) => {
     res.status(200).json({ userId, lastLogin });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// Logout user — invalidates session in cache and clears cookie
+exports.logout = async (req, res) => {
+  try {
+    deleteSession(req.user.userId);
+    res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ message: 'Logout failed' });
   }
 };
 

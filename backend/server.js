@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const passwordController = require('./controllers/password');
@@ -27,6 +28,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Cookie parsing
+app.use(cookieParser());
 
 // JSON parsing
 app.use('/api', express.json());
@@ -67,14 +71,15 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-// OTP cleanup every minute
+// OTP cleanup runs once per OTP validity period
+const OTP_VALID_TIME = (parseInt(process.env.OTP_VALID_TIME) || 120) * 1000;
 setInterval(async () => {
   try {
     await passwordController.cleanupExpired();
   } catch (error) {
     console.error('OTP cleanup error:', error);
   }
-}, 60000);
+}, OTP_VALID_TIME);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users, UserPlus, Clock, Mail, Check, X, Trash2, IdCard, Shield, User as UserIcon, Bell, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import Alert from '../components/Alert';
 import PageLoader from '../components/loading';
 import { RemainderCard } from './Remainder';
@@ -71,23 +71,13 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
   };
 
   const handleDeleteUser = async (userId) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('[DELETE] No token found in localStorage');
-      setAlertState({ type: 'error', title: 'Deletion Failed', message: 'Authentication error: No token found' });
-      return;
-    }
-
     console.log(`[DELETE] Starting deletion for userId: ${userId}`);
     const startTime = Date.now();
-    const apiEndpoint = apiUrl(`/api/admin/users/${userId}`);
-    console.log(`[DELETE] API Endpoint: ${apiEndpoint}`);
 
     try {
-      console.log(`[DELETE] Sending DELETE request to ${apiEndpoint}`);
-      const res = await fetch(apiEndpoint, {
+      console.log(`[DELETE] Sending DELETE request for userId: ${userId}`);
+      const res = await apiFetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
       
       console.log(`[DELETE] Response status: ${res.status}`);
@@ -124,9 +114,6 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
   };
 
   const handleRequestAction = async (id, action) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     const isApprove = action === 'approve';
     const loadingTitle = isApprove ? 'Approving...' : 'Rejecting...';
     setAlertState({ type: 'loading', title: loadingTitle });
@@ -134,9 +121,8 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
     const startTime = Date.now();
 
     try {
-      const res = await fetch(apiUrl(`/api/signup/${action}/${id}`), {
+      const res = await apiFetch(`/api/signup/${action}/${id}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -174,18 +160,10 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
   };
 
   const load = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Not signed in.');
-      setLoading(false);
-      return;
-    }
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/admin/dashboard'), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch('/api/admin/dashboard');
       const json = await res.json().catch(() => ({}));
       if (res.status === 403) {
         setError('You do not have admin access.');
@@ -444,13 +422,6 @@ function EmployeeHome({ user }) {
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.userId || 'there';
   return (
     <div className="home-employee-section">
-      <div className="home-employee-section__welcome">
-        <div className="home-welcome-employee__card">
-          <h1 className="home-welcome-employee__title">Welcome back</h1>
-          <p className="home-welcome-employee__name">{name}</p>
-          <p className="home-welcome-employee__hint">Use the sidebar to open Excel tools or view data.</p>
-        </div>
-      </div>
       <div className="home-employee-section__upcoming">
         <RemainderCard />
       </div>
@@ -491,15 +462,8 @@ export default function HomePage() {
   useEffect(() => {
     if (isAdmin) {
       const loadAdminData = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setInitialLoading(false);
-          return;
-        }
         try {
-          const res = await fetch(apiUrl('/api/admin/dashboard'), {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await apiFetch('/api/admin/dashboard');
           const json = await res.json().catch(() => ({}));
           if (res.ok) {
             setAdminData(json);

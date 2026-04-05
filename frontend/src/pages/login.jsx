@@ -356,13 +356,12 @@ export default function LoginPage() {
       const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ userId: formData.userId, password: formData.password })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Login failed');
-      
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+
       login(data.user);
       navigate('/dashboard');
     } catch (err) {
@@ -790,7 +789,7 @@ export default function LoginPage() {
       {/* Top Left Background Heading */}
       <div className="absolute top-6 left-6 md:top-8 md:left-10 select-none pointer-events-none z-10">
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-rose-900 leading-none tracking-tighter whitespace-nowrap" style={{ textShadow: generateLongShadow(10) }}>
-          7FS - 3i SERVICES
+          3i SERVICES
         </h1>
       </div>
 

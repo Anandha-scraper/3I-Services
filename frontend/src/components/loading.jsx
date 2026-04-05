@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, duration = 2000 }) => {
+const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, duration = 500 }) => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
   const [loaderComplete, setLoaderComplete] = useState(false);

@@ -5,7 +5,8 @@ const ledgerLogsService = require('../services/ledgerLogs');
  */
 exports.list = async (req, res) => {
   try {
-    const logs = await ledgerLogsService.list({ limit: req.query.limit });
+    const cityFilter = req.user.role === 'admin' ? null : (req.user.city || null);
+    const logs = await ledgerLogsService.list({ limit: req.query.limit, city: cityFilter });
 
     res.json({
       count: logs.length,

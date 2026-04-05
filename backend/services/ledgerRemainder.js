@@ -87,21 +87,28 @@ class LedgerRemainderService {
   async list(opts = {}) {
     const raw = opts.limit != null ? parseInt(String(opts.limit), 10) : 500;
     const limit = Math.min(Math.max(Number.isNaN(raw) ? 500 : raw, 1), 2000);
-    
+    const city = opts.city ? String(opts.city).trim().toLowerCase() : null;
+
     try {
-      // Try to order by updatedAt if available
-      const snapshot = await this.collection
+      let query = this.collection;
+      if (city) {
+        query = query.where('city', '==', city);
+      }
+      const snapshot = await query
         .orderBy('updatedAt', 'desc')
         .limit(limit)
         .get();
-      
-      console.log('Ledger Remainder list - found', snapshot.docs.length, 'documents with updatedAt');
+
+      console.log('Ledger Remainder list - found', snapshot.docs.length, 'documents', city ? `(city: ${city})` : '(all cities)');
       return this._processLedgerDocs(snapshot.docs);
     } catch (error) {
-      // Fallback: if updatedAt ordering fails, just fetch without ordering
       console.warn('updatedAt ordering failed, using fallback:', error.message);
-      const snapshot = await this.collection.limit(limit).get();
-      
+      let query = this.collection;
+      if (city) {
+        query = query.where('city', '==', city);
+      }
+      const snapshot = await query.limit(limit).get();
+
       console.log('Ledger Remainder list (fallback) - found', snapshot.docs.length, 'documents');
       return this._processLedgerDocs(snapshot.docs);
     }
@@ -113,6 +120,7 @@ class LedgerRemainderService {
     const resultLimit = opts.limit != null ? parseInt(String(opts.limit), 10) : 500;
     // Fetch more records from Firestore to ensure we find enough matches
     const fetchLimit = 2000;
+    const city = opts.city ? String(opts.city).trim().toLowerCase() : null;
 
     try {
       const now = new Date();
@@ -120,10 +128,14 @@ class LedgerRemainderService {
       const endDate = new Date(today);
       endDate.setDate(endDate.getDate() + days);
 
-      console.log('[getUpcomingRemainders] TODAY:', today.toISOString().split('T')[0], 'END_DATE:', endDate.toISOString().split('T')[0]);
+      console.log('[getUpcomingRemainders] TODAY:', today.toISOString().split('T')[0], 'END_DATE:', endDate.toISOString().split('T')[0], city ? `city: ${city}` : 'all cities');
 
-      // Get all remainders - we'll filter by date in the application
-      const snapshot = await this.collection
+      // Get remainders - filter by city if provided
+      let query = this.collection;
+      if (city) {
+        query = query.where('city', '==', city);
+      }
+      const snapshot = await query
         .limit(fetchLimit)
         .get();
 

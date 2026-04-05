@@ -6,7 +6,7 @@ const excelMasterService = require('../services/excelMaster');
 const outstandingService = require('../services/outstanding');
 
 /** Listed API columns = master fields only (no doc id / import metadata). */
-const LIST_COLUMNS = EXCEL_MASTER_FIELDS;
+const LIST_COLUMNS = EXCEL_MASTER_FIELDS.filter(f => f !== 'ledger_id');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -56,14 +56,15 @@ exports.uploadMaster = async (req, res) => {
       ledger_id: generateLedgerId(record.ledger),
     }));
 
-    const count = await excelMasterService.bulkInsert(enrichedRecords, {
+    const result = await excelMasterService.bulkInsert(enrichedRecords, {
       userId: req.user.userId,
       fileName: req.file.originalname,
     });
 
     res.status(201).json({
       message: 'Excel master data imported',
-      inserted: count,
+      inserted: result.inserted,
+      updated: result.updated,
       fileName: req.file.originalname,
     });
   } catch (e) {

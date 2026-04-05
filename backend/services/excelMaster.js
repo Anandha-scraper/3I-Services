@@ -9,43 +9,44 @@ class ExcelMasterService {
     this.collection = db.collection(COLLECTION_NAME);
   }
   async bulkInsert(rows, meta) {
-    if (!rows.length) return 0;
+    if (!rows.length) return { inserted: 0, updated: 0 };
     const { userId, fileName } = meta;
     const importedAt = new Date().toISOString();
     let inserted = 0;
+    let updated = 0;
 
-    // Filter out duplicates based on ledger_id before inserting
+    // Deduplicate uploaded rows by ledger_id (last entry wins)
     const uniqueRowsMap = new Map();
-    
-    // First, keep only the latest entry from the uploaded rows for each ledger_id
     for (const row of rows) {
       if (row.ledger_id) {
         uniqueRowsMap.set(row.ledger_id, row);
       }
     }
 
-    // Now, fetch existing ledger_ids from the database to avoid re-inserting them
-    const existingLedgerIds = new Set();
-    const ledgerIdsToInsert = Array.from(uniqueRowsMap.keys());
-    
-    // We have to batch the 'in' query since Firestore limits it to 30 items
-    for (let i = 0; i < ledgerIdsToInsert.length; i += 30) {
-      const idBatch = ledgerIdsToInsert.slice(i, i + 30);
+    // Fetch existing ledger_ids and their document refs from the database
+    const existingDocRefs = new Map(); // ledger_id -> docRef
+    const ledgerIds = Array.from(uniqueRowsMap.keys());
+
+    for (let i = 0; i < ledgerIds.length; i += 30) {
+      const idBatch = ledgerIds.slice(i, i + 30);
       const snapshot = await this.collection.where('ledger_id', 'in', idBatch).get();
       snapshot.forEach(doc => {
-        existingLedgerIds.add(doc.data().ledger_id);
+        existingDocRefs.set(doc.data().ledger_id, doc.ref);
       });
     }
 
-    // Filter out rows that already exist in the database
-    const rowsToInsert = Array.from(uniqueRowsMap.values()).filter(
-      row => !existingLedgerIds.has(row.ledger_id)
-    );
-
-    if (rowsToInsert.length === 0) {
-       return 0; // Nothing new to insert
+    // Partition into new inserts and existing updates
+    const rowsToInsert = [];
+    const rowsToUpdate = [];
+    for (const [ledgerId, row] of uniqueRowsMap) {
+      if (existingDocRefs.has(ledgerId)) {
+        rowsToUpdate.push({ row, ref: existingDocRefs.get(ledgerId) });
+      } else {
+        rowsToInsert.push(row);
+      }
     }
 
+    // Insert new records
     for (let i = 0; i < rowsToInsert.length; i += BATCH_MAX) {
       const batch = db.batch();
       const chunk = rowsToInsert.slice(i, i + BATCH_MAX);
@@ -62,17 +63,32 @@ class ExcelMasterService {
       await batch.commit();
     }
 
-    // After inserting Excel master records, populate Ledger_Remainder collection
-    // We pass rowsToInsert so we only update remainders for the newly inserted ones 
-    // or we can pass rows to update everyone. We pass rowsToInsert to be safe.
-    try {
-      await ledgerRemainderService.upsertFromExcelRecords(rowsToInsert, meta);
-    } catch (error) {
-      console.error('Error populating Ledger_Remainder:', error);
-      // Continue even if ledger remainder fails to not break the upload
+    // Update existing records (all fields except ledger_id)
+    for (let i = 0; i < rowsToUpdate.length; i += BATCH_MAX) {
+      const batch = db.batch();
+      const chunk = rowsToUpdate.slice(i, i + BATCH_MAX);
+      for (const { row, ref } of chunk) {
+        const { ledger_id, ...fieldsToUpdate } = row;
+        batch.update(ref, {
+          ...fieldsToUpdate,
+          importedAt,
+          importedByUserId: userId || null,
+          sourceFileName: fileName || null,
+        });
+        updated += 1;
+      }
+      await batch.commit();
     }
 
-    return inserted;
+    // Populate Ledger_Remainder for all rows (both inserted and updated)
+    const allRows = [...rowsToInsert, ...rowsToUpdate.map(r => r.row)];
+    try {
+      await ledgerRemainderService.upsertFromExcelRecords(allRows, meta);
+    } catch (error) {
+      console.error('Error populating Ledger_Remainder:', error);
+    }
+
+    return { inserted, updated };
   }
 
   async list(opts = {}) {

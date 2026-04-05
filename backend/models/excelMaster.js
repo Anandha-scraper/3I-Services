@@ -74,6 +74,8 @@ function pickMasterFields(row) {
     // Convert ledger field to uppercase to act as primary key
     if (k === 'ledger') {
       out[k] = fieldValue.toUpperCase();
+    } else if (k === 'city') {
+      out[k] = fieldValue.toLowerCase();
     } else {
       out[k] = fieldValue;
     }

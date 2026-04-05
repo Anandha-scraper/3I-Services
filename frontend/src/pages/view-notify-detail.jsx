@@ -5,7 +5,7 @@ import DatePicker from '../components/datepicker';
 import { SaveButton, CancelButton } from '../components/Button';
 import Alert from '../components/Alert';
 import PageLoader from '../components/loading';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import '../styles/pagestyles/view-notify-detail.css';
 
 export default function NotifyDetailPage() {
@@ -37,14 +37,7 @@ export default function NotifyDetailPage() {
       }
 
       try {
-        const token = localStorage.getItem('token');
-
-        const response = await fetch(apiUrl(`/api/ledger-remainder?limit=500`), {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const response = await apiFetch(`/api/ledger-remainder?limit=500`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status}`);
@@ -106,14 +99,7 @@ export default function NotifyDetailPage() {
       if (!ledgerData?.ledger_id) return;
       
       try {
-        const token = localStorage.getItem('token');
-        
-        const response = await fetch(apiUrl(`/api/ledger-remainder?limit=500`), {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const response = await apiFetch(`/api/ledger-remainder?limit=500`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch customer data: ${response.status}`);
@@ -252,12 +238,6 @@ export default function NotifyDetailPage() {
       setIsLoading(true);
       setAlert(null);
 
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setAlert({ type: 'error', title: 'Not Logged In', message: 'Please log in to save changes.' });
-        return;
-      }
-
       const customers = customersOverride ?? additionalCustomers;
 
       // Build update body with main fields and additional customers
@@ -283,12 +263,9 @@ export default function NotifyDetailPage() {
 
       console.log('handleSave - complete updateBody:', updateBody);
 
-      const response = await fetch(apiUrl(`/api/ledger-remainder/${encodeURIComponent(ledgerData.ledger_id)}`), {
+      const response = await apiFetch(`/api/ledger-remainder/${encodeURIComponent(ledgerData.ledger_id)}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateBody),
       });
 

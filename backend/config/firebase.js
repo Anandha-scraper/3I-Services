@@ -2,7 +2,7 @@ const admin = require('firebase-admin');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
-// Initialize Firebase Admin - Local Development
+
 const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
 if (!fs.existsSync(serviceAccountPath)) {
   console.error('add serviceAccountKey.json to backend/config/');

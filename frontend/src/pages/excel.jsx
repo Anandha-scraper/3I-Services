@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, FileUp, Download, Settings, Trash2, ChevronDown, Check, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Alert from '../components/Alert';
-import { apiUrl } from '../utils/api';
+import { apiFetch } from '../utils/api';
 import '../styles/pagestyles/excel.css';
 
 export default function ExcelPage() {
@@ -129,12 +129,9 @@ export default function ExcelPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(apiUrl(card.endpoint), {
+      const response = await apiFetch(card.endpoint, {
         method: 'POST',
         body: formData,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
       });
 
       // Try to parse response as JSON
@@ -251,12 +248,9 @@ export default function ExcelPage() {
         });
 
         try {
-          const response = await fetch(apiUrl(`/api/excel/clear/${collection}`), {
+          const response = await apiFetch(`/api/excel/clear/${collection}`, {
             method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
           });
 
           const data = await response.json();

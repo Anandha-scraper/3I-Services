@@ -1,20 +1,29 @@
-// Verifies JWT tokens and attaches decoded user information to the request object.
+// Verifies JWT from cookie, checks session cache, and attaches decoded user info to the request.
 const { verifyToken } = require('../utils/jwt');
+const { getSession } = require('../utils/sessionCache');
 
-// Middleware to verify JWT token and attach user info to request
+// Middleware to verify JWT cookie and validate active session in cache
 const authenticate = async (req, res, next) => {
   try {
-    // Get the token from the Authorization header (Bearer <token>)
-    const tokenHeader = req.headers.authorization;
+    const token = req.cookies?.token;
 
-    if (!tokenHeader || !tokenHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
+    if (!token) {
+      return res.status(401).json({ message: 'No session token provided' });
     }
 
-    const token = tokenHeader.split(' ')[1];
-
-    // Verify the JWT token
+    // Step 1: Verify JWT signature and expiry
     const decodedToken = verifyToken(token);
+
+    // Step 2: Check the token exists in the session cache
+    const cachedToken = getSession(decodedToken.userId);
+    if (!cachedToken) {
+      return res.status(401).json({ message: 'Session expired or logged out' });
+    }
+
+    // Step 3: Confirm the cookie token matches the stored token
+    if (cachedToken !== token) {
+      return res.status(401).json({ message: 'Session superseded by a newer login' });
+    }
 
     // Attach user info to request
     req.user = decodedToken;

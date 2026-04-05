@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginPage from './src/pages/login';
 import HomePage from './src/pages/home';
 import ExcelPage from './src/pages/excel';
@@ -10,14 +10,25 @@ import NotifyPage from './src/pages/view-notify';
 import NotifyDetailPage from './src/pages/view-notify-detail';
 import ViewLogPage from './src/pages/view-log';
 import ViewOutstandingsPage from './src/pages/view-outstandings';
-import ViewModifyCallsPage from './src/pages/view-modify-calls';
-import UserProfilePage from './src/pages/userprofile';
+import UserProfilePage from './src/components/userprofile';
 import Dashboard from './src/components/Dashboard';
 
 function ProtectedRoute({ children, activeTab }) {
-  const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
-  
+  const { isLoggedIn } = useAuth();
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+
+  return (
+    <Dashboard activeTab={activeTab}>
+      {children}
+    </Dashboard>
+  );
+}
+
+function AdminRoute({ children, activeTab }) {
+  const { isLoggedIn, user } = useAuth();
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/home" replace />;
+
   return (
     <Dashboard activeTab={activeTab}>
       {children}
@@ -44,18 +55,18 @@ function App() {
           <Route
             path="/excel"
             element={
-              <ProtectedRoute activeTab="excel">
+              <AdminRoute activeTab="excel">
                 <ExcelPage />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
 
           <Route
             path="/excel-master"
             element={
-              <ProtectedRoute activeTab="excel">
+              <AdminRoute activeTab="excel">
                 <ExcelMasterPage />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
 
@@ -69,9 +80,9 @@ function App() {
           />
 
           <Route
-            path="/viewdata"
+            path="/view-master"
             element={
-              <ProtectedRoute activeTab="viewdata">
+              <ProtectedRoute activeTab="view">
                 <ViewDataPage />
               </ProtectedRoute>
             }
@@ -109,15 +120,6 @@ function App() {
             element={
               <ProtectedRoute activeTab="view">
                 <ViewOutstandingsPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/modify-calls"
-            element={
-              <ProtectedRoute activeTab="modify-calls">
-                <ViewModifyCallsPage />
               </ProtectedRoute>
             }
           />
