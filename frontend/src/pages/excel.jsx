@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, FileUp, Download, Settings, Trash2, ChevronDown, Check, AlertTriangle } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Upload, FileUp, Settings, Trash2, ChevronDown, Check, AlertTriangle } from 'lucide-react';
+
 import Alert from '../components/Alert';
 import { apiFetch } from '../utils/api';
 import '../styles/pagestyles/excel.css';
@@ -54,63 +54,6 @@ export default function ExcelPage() {
     setActiveCard(cardId);
     setFileType(cardId);
     fileInputRef.current?.click();
-  };
-
-  const handleTemplateDownload = (e, cardId) => {
-    e.stopPropagation(); // Prevent card click event
-
-    let worksheetData = [];
-    let fileName = '';
-    let columnWidths = [];
-
-    if (cardId === 'master') {
-      // Master template headers - all 40 fields as per backend EXCEL_MASTER_FIELDS
-      worksheetData = [
-        [
-          'CODE', 'TYPE', 'LEDGER', 'CITY', 'GROUP', 'NAME',
-          'ADDRESS1', 'ADDRESS2', 'ADDRESS3', 'PIN', 'EMAIL', 'SITE',
-          'CONTACT', 'PHONE1', 'PHONE2', 'MOBILE', 'RESI', 'FAX',
-          'LICENCE', 'TIN', 'STNO', 'PANNO', 'MR', 'AREA',
-          'ROUT', 'TPT', 'TPTDLV', 'BANK', 'BANKADD1', 'BANKADD2',
-          'BRANCH', 'CRDAYS', 'CRAMOUNT', 'LIMITBILL', 'LIMITDAY',
-          'LIMITTYPE', 'FREEZ'
-        ],
-      ];
-      fileName = 'master_template.xlsx';
-      // Set column widths - all columns 15 characters wide
-      columnWidths = worksheetData[0].map(() => ({ wch: 15 }));
-    } else if (cardId === 'outstanding') {
-      // Outstanding template with blank rows 1-3, headers in row 4, data starts row 5
-      worksheetData = [
-        ['', '', '', '', ''],  // Row 1: Empty
-        ['', '', '', '', ''],  // Row 2: Empty
-        ['', '', '', '', ''],  // Row 3: Empty
-        ['SERIAL', 'LEDGER', 'GROUP', 'DEBIT', 'CREDIT'],  // Row 4: Column headers
-      ];
-      fileName = 'outstanding_template.xlsx';
-      // Set specific column widths for outstanding template
-      columnWidths = [
-        { wch: 10 },  // SERIAL - narrow for numbers
-        { wch: 35 },  // LEDGER - wider for ledger names
-        { wch: 30 },  // GROUP
-        { wch: 15 },  // DEBIT
-        { wch: 15 },  // CREDIT
-      ];
-    }
-
-    // Create workbook and worksheet
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-    // Set column widths
-    worksheet['!cols'] = columnWidths;
-
-
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
-
-    // Generate Excel file and trigger download
-    XLSX.writeFile(workbook, fileName);
   };
 
   const handleFileSelect = async (e) => {
@@ -348,14 +291,6 @@ export default function ExcelPage() {
                 }
               }}
             >
-              <button
-                className="template-download-btn"
-                onClick={(e) => handleTemplateDownload(e, card.id)}
-                title="Download Template"
-                aria-label={`Download ${card.title} template`}
-              >
-                <Download size={20} />
-              </button>
               <div className="portal-card-icon">
                 <Icon size={40} color={card.color} />
               </div>

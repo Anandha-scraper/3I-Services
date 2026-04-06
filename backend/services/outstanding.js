@@ -129,7 +129,7 @@ class OutstandingService {
 
         // Find the ledger in Ledger_Remainder for updating
         const ledgerSnapshot = await db
-          .collection('Ledger_Remainder')
+          .collection('Outstanding_Remainder')
           .where('ledger_id', '==', ledgerId)
           .limit(1)
           .get();
@@ -201,19 +201,26 @@ class OutstandingService {
 
         results.updated += 1;
 
+        // Determine which fields actually changed for highlighting
+        const changedFields = [];
+        if (newDebit !== previousDebit) changedFields.push('ldebit');
+        if (newCredit !== previousCredit) changedFields.push('lcredit');
+        if (newComments !== previousComments) changedFields.push('comments');
+
         // Create audit log entry
         logsToCreate.push({
           ledger_id: ledgerId,
           ledger_name: ledgerData.ledger_name,
           group: String(record.group || '').trim() || ledgerData.group,
-          debit: newDebit,
-          credit: newCredit,
+          ldebit: newDebit,
+          lcredit: newCredit,
+          nextCallDate: '',
           date: parsedDate || String(record.date || '').trim(),
           comments: newComments,
-          previous_debit: previousDebit,
-          previous_credit: previousCredit,
           operation: (previousDebit === 0 && previousCredit === 0) ? 'insert' : 'update',
+          updatedFields: changedFields,
           userId,
+          city: ledgerData.city || '',
         });
 
         results.found.push({
@@ -254,7 +261,7 @@ class OutstandingService {
   async getSummary(ledger_id) {
     try {
       const ledgerDoc = await db
-        .collection('Ledger_Remainder')
+        .collection('Outstanding_Remainder')
         .where('ledger_id', '==', ledger_id)
         .limit(1)
         .get();

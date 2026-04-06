@@ -34,6 +34,14 @@
   border-radius: 6px;
 }
 
+.ledger-header-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+
 .ledger-icon {
   color: #64748b;
   flex-shrink: 0;
@@ -59,6 +67,93 @@
   border-radius: 9999px;
   white-space: nowrap;
   margin-left: 0.4rem;
+}
+
+.ledger-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  flex: 1;
+}
+
+.summary-card {
+  padding: 0.8rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 0.8rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  min-height: 50px;
+  align-items: center;
+}
+
+.summary-card--blue {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  color: #1e3a8a;
+}
+
+.summary-card--purple {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 1px solid #d8b4fe;
+  color: #4c1d95;
+}
+
+.summary-card--orange {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  border: 1px solid #fb923c;
+  color: #9a3412;
+}
+
+.summary-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.summary-card-icon {
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.summary-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bank-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.bank-address {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.85;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.summary-card-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.summary-card-comment {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 
@@ -154,8 +249,7 @@
 }
 
 .interaction-cards.clickable .detail-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
 .customer-details-heading {
@@ -427,42 +521,16 @@
 }
 
 .customer-details-row--clickable:hover .detail-card {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
-}
-
-.add-customer-btn {
-  padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(56, 189, 248, 0.3);
-  margin-top: 0.8rem;
-}
-
-.add-customer-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(56, 189, 248, 0.4);
-}
-
-.add-customer-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .form-action-buttons-center {
   display: flex;
   gap: 0.8rem;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   margin-top: 1.2rem;
-  flex-wrap: wrap;
+  flex-wrap: wrap-reverse;
 }
 
 @keyframes slideIn {

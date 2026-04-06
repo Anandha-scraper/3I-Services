@@ -55,7 +55,7 @@ const { db } = require('../config/firebase');
 
 const COLLECTIONS = {
   EXCEL_MASTER: 'Excel_master',
-  LEDGER_REMAINDER: 'Ledger_Remainder',
+  LEDGER_REMAINDER: 'Outstanding_Remainder',
   LEDGER_LOGS: 'Ledger_logs',
 };
 

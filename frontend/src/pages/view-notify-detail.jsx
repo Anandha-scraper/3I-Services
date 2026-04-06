@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { User, TrendingDown, TrendingUp, Calendar, MessageSquare, Phone, Mail } from 'lucide-react';
+import { User, Landmark, TrendingDown, TrendingUp, Calendar, MessageSquare, Phone, Mail } from 'lucide-react';
 import DatePicker from '../components/datepicker';
-import { SaveButton, CancelButton } from '../components/Button';
+import { SaveButton, CancelButton, AddCustomerButton } from '../components/Button';
 import Alert from '../components/Alert';
 import PageLoader from '../components/loading';
 import { apiFetch } from '../utils/api';
@@ -19,8 +19,12 @@ export default function NotifyDetailPage() {
   const [isEditingDate, setIsEditingDate] = useState(false);
   const [isEditingComment, setIsEditingComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [initialDataLoading, setInitialDataLoading] = useState(true);
+  const [ledgerDataLoading, setLedgerDataLoading] = useState(true);
+  const [customerDataLoading, setCustomerDataLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
+  
+  // Combined loading state - loader shows while any data is loading
+  const isDataLoading = ledgerDataLoading || customerDataLoading;
   const [alert, setAlert] = useState(null);
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', mobile: '', email: '' });
@@ -32,7 +36,7 @@ export default function NotifyDetailPage() {
   useEffect(() => {
     const fetchLedgerData = async () => {
       if (!row?.ledger_id) {
-        setInitialDataLoading(false);
+        setLedgerDataLoading(false);
         return;
       }
 
@@ -85,8 +89,8 @@ export default function NotifyDetailPage() {
         setEditableDate(row?.date || '');
         setEditableComments(row?.lastComments || row?.comments || '');
       } finally {
-        // Data loading complete
-        setInitialDataLoading(false);
+        // Ledger data loading complete
+        setLedgerDataLoading(false);
       }
     };
 
@@ -96,7 +100,12 @@ export default function NotifyDetailPage() {
   // Fetch customer data from Ledger_Remainder based on ledger_id
   useEffect(() => {
     const fetchCustomerData = async () => {
-      if (!ledgerData?.ledger_id) return;
+      if (!ledgerData?.ledger_id) {
+        setCustomerDataLoading(false);
+        return;
+      }
+      
+      setCustomerDataLoading(true);
       
       try {
         const response = await apiFetch(`/api/ledger-remainder?limit=500`);
@@ -128,6 +137,9 @@ export default function NotifyDetailPage() {
       } catch (error) {
         console.error('Error fetching customer data:', error);
         // Silently fail if customer data is not found
+      } finally {
+        // Customer data loading complete
+        setCustomerDataLoading(false);
       }
     };
 
@@ -156,7 +168,7 @@ export default function NotifyDetailPage() {
   };
 
   const handleAddCustomer = () => {
-    if (additionalCustomers.length < 2) {
+    if (additionalCustomers.length < 3) {
       setNewCustomer({ name: '', mobile: '', email: '' });
       setIsAddingCustomer(true);
     }
@@ -365,17 +377,45 @@ export default function NotifyDetailPage() {
       {showLoader && (
         <PageLoader
           pageName="Notification Detail"
-          isDataLoading={initialDataLoading}
+          isDataLoading={isDataLoading}
+          duration={500}
           onComplete={() => setShowLoader(false)}
         />
       )}
 
       <div className="ledger-card">
-          <div className="ledger-title-wrapper">
-            <User className="ledger-icon" size={24} />
-            <h2>{ledgerData ? ledgerData.ledger_name : 'No ledger selected'}</h2>
-            {ledgerData && ledgerData.group && (
-              <span className="ledger-group-badge">{ledgerData.group}</span>
+          <div className="ledger-header-wrapper">
+            <div className="ledger-title-wrapper">
+              <User className="ledger-icon" size={24} />
+              <h2>{ledgerData ? ledgerData.ledger_name : 'No ledger selected'}</h2>
+              {ledgerData && ledgerData.group && (
+                <span className="ledger-group-badge">{ledgerData.group}</span>
+              )}
+            </div>
+
+            {ledgerData && (
+              <div className="ledger-summary-cards">
+                <div className="summary-card summary-card--blue">
+                  <Landmark className="summary-card-icon" size={20} />
+                  <div className="summary-card-content">
+                    <div className="bank-name">{ledgerData.bank || '—'}</div>
+                  </div>
+                </div>
+
+                <div className="summary-card summary-card--purple">
+                  <Landmark className="summary-card-icon" size={20} />
+                  <div className="summary-card-content">
+                    <div className="bank-address">{ledgerData.bankadd1 || '—'}</div>
+                  </div>
+                </div>
+
+                <div className="summary-card summary-card--orange">
+                  <Landmark className="summary-card-icon" size={20} />
+                  <div className="summary-card-content">
+                    <div className="bank-address">{ledgerData.bankadd2 || '—'}</div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
@@ -718,14 +758,12 @@ export default function NotifyDetailPage() {
                 </>
               ) : (
                 <>
-                  {additionalCustomers.length < 2 && (
-                    <button
-                      className="add-customer-btn"
+                  {additionalCustomers.length < 3 && (
+                    <AddCustomerButton
                       onClick={handleAddCustomer}
+                      disabled={isLoading}
                       title="Add another customer"
-                    >
-                      + Add Customer
-                    </button>
+                    />
                   )}
                 </>
               )}

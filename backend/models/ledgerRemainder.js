@@ -24,7 +24,7 @@ const LEDGER_REMAINDER_FIELDS = [
   'cemail3',
 ];
 
-const LEDGER_REMAINDER_COLLECTION_NAME = 'Ledger_Remainder';
+const LEDGER_REMAINDER_COLLECTION_NAME = 'Outstanding_Remainder';
 
 function createLedgerRemainderEntry(ledger_id, ledger_name, city, debit = 0, credit = 0, nextCallDate = null, comments = null, group = null, contact = null, mobile = null, email = null) {
   const entry = {

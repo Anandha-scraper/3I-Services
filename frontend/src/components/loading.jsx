@@ -1,41 +1,69 @@
-import React, { useState, useEffect } from 'react';
-
-const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, duration = 500 }) => {
+import React, { useState, useEffect, useRef } from 'react';
+const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, duration = 1500 }) => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
-  const [loaderComplete, setLoaderComplete] = useState(false);
+  const startTimeRef = useRef(Date.now());
+  const timerDoneRef = useRef(false);
+  const dataLoadedRef = useRef(false);
+  const exitingRef = useRef(false);
 
+  // Track data loaded state via ref so the interval can read it
   useEffect(() => {
-    const startTime = Date.now();
+    dataLoadedRef.current = !isDataLoading;
+  }, [isDataLoading]);
 
-    const updateProgress = () => {
-      const elapsedTime = Date.now() - startTime;
-      const currentProgress = Math.min((elapsedTime / duration) * 100, 100);
+  // Single interval drives everything
+  useEffect(() => {
+    const tryExit = () => {
+      if (exitingRef.current) return;
+      if (timerDoneRef.current && dataLoadedRef.current) {
+        exitingRef.current = true;
+        setProgress(100);
 
-      setProgress(Math.floor(currentProgress));
-
-      if (currentProgress < 100) {
-        setTimeout(updateProgress, 30);
-      } else {
-        setLoaderComplete(true);
+        // Brief pause at 100%, then slide out
+        setTimeout(() => {
+          setIsExiting(true);
+          // After exit animation completes, call onComplete
+          setTimeout(() => {
+            if (onComplete) onComplete();
+          }, 500);
+        }, 400);
       }
     };
 
-    const initialTimeout = setTimeout(updateProgress, 30);
-    return () => clearTimeout(initialTimeout);
-  }, [duration]);
+    const id = setInterval(() => {
+      if (exitingRef.current) return;
 
-  // When loader is complete AND data is no longer loading, trigger exit
+      const elapsed = Date.now() - startTimeRef.current;
+      const ratio = Math.min(elapsed / duration, 1);
+
+      if (ratio < 1) {
+        // Animate to 90% over the duration
+        setProgress(Math.floor(ratio * 90));
+      } else {
+        // Timer done — hold at 90 until data is also done
+        timerDoneRef.current = true;
+        setProgress(90);
+        tryExit();
+      }
+    }, 30);
+
+    return () => clearInterval(id);
+  }, [duration, onComplete]);
+
+  // If data finishes before timer, check exit
   useEffect(() => {
-    if (loaderComplete && !isDataLoading) {
+    if (!isDataLoading && timerDoneRef.current && !exitingRef.current) {
+      exitingRef.current = true;
+      setProgress(100);
       setTimeout(() => {
         setIsExiting(true);
         setTimeout(() => {
           if (onComplete) onComplete();
-        }, 1000);
-      }, 500);
+        }, 500);
+      }, 400);
     }
-  }, [loaderComplete, isDataLoading, onComplete]);
+  }, [isDataLoading, onComplete]);
 
   return (
     <>
@@ -99,17 +127,17 @@ const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, d
         <div className="w-full p-6 md:p-10 flex flex-col gap-4">
           <div className="flex justify-between items-end w-full">
             <span className="text-xs md:text-sm text-zinc-500 uppercase tracking-widest font-sans">
-              {isDataLoading ? 'Loading Data' : 'System Initialization'}
+              {isDataLoading ? 'Loading Data' : 'Complete'}
             </span>
             <span className="text-4xl md:text-6xl tabular-nums stylish-font text-zinc-900">
-              {isDataLoading && progress === 100 ? '100' : progress}%
+              {progress}%
             </span>
           </div>
 
           <div className="w-full h-[2px] bg-zinc-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-zinc-900 transition-all duration-300 ease-out"
-              style={{ width: isDataLoading && progress === 100 ? '100%' : `${progress}%` }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>

@@ -157,6 +157,7 @@ export default function ViewDataPage() {
         <PageLoader
           pageName="Master"
           isDataLoading={loading}
+          duration={1500}
           onComplete={() => setShowLoader(false)}
         />
       )}

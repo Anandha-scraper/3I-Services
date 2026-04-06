@@ -102,6 +102,7 @@ export default function NotifyPage() {
         <PageLoader
           pageName="Notifications"
           isDataLoading={loading}
+          duration={1500}
           onComplete={() => setShowLoader(false)}
         />
       )}

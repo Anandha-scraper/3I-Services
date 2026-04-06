@@ -6,39 +6,26 @@ import DatePicker from '../components/datepicker';
 import PageLoader from '../components/loading';
 import '../styles/pagestyles/view-log.css';
 
-// Helper function to check if a field was updated
+// Helper function to check if a field was updated in this log entry
 const isFieldUpdated = (item, fieldName) => {
-  if (item.operation === 'insert') return false; // Initial entries not highlighted
-  
-  if (fieldName === 'debit') {
-    return item.debit !== (item.previous_debit || 0);
+  if (!item.updatedFields) return false;
+  // For 'insert' operations, all non-empty fields are considered new
+  if (item.operation === 'insert') {
+    if (fieldName === 'ldebit') return item.ldebit > 0;
+    if (fieldName === 'lcredit') return item.lcredit > 0;
+    if (fieldName === 'nextCallDate') return !!item.nextCallDate;
+    if (fieldName === 'comments') return !!item.comments;
+    return false;
   }
-  if (fieldName === 'credit') {
-    return item.credit !== (item.previous_credit || 0);
-  }
-  if (fieldName === 'comments') {
-    return item.operation === 'update' && item.comments;
-  }
-  if (fieldName === 'date') {
-    return item.operation === 'update' && item.date;
-  }
-  return false;
+  return Array.isArray(item.updatedFields) && item.updatedFields.includes(fieldName);
 };
 
-// Styles for updated cells with different colors for each field type
-const updatedCellStyles = {
-  debit: {
-    backgroundColor: '#dcfce7',
-  },
-  credit: {
-    backgroundColor: '#fee2e2',
-  },
-  date: {
-    backgroundColor: '#ede9fe',
-  },
-  comments: {
-    backgroundColor: '#fef3c7',
-  },
+// Different highlight colors per field for the full table cell
+const highlightColors = {
+  ldebit: { backgroundColor: '#dcfce7' },     // green tint
+  lcredit: { backgroundColor: '#fee2e2' },     // red tint
+  nextCallDate: { backgroundColor: '#dbeafe' }, // blue tint
+  comments: { backgroundColor: '#fef3c7' },    // amber tint
 };
 
 export default function ViewLogPage() {
@@ -49,7 +36,7 @@ export default function ViewLogPage() {
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all'); // all, credit, debit, insert, update
+  const [filterType, setFilterType] = useState('all'); // all, credit, debit
   const [dateFromInput, setDateFromInput] = useState('');
   const [dateToInput, setDateToInput] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -88,73 +75,102 @@ export default function ViewLogPage() {
       key: 'timestamp',
       label: 'Created At',
       sortable: true,
-      width: '15%',
+      width: '10%',
       align: 'center',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-        {new Date(item.timestamp).toLocaleString('en-IN', { 
+        {new Date(item.timestamp).toLocaleString('en-IN', {
           year: 'numeric', month: 'short', day: 'numeric',
           hour: '2-digit', minute: '2-digit'
         })}
       </span>
     },
     {
+      key: 'ledger_name',
+      label: 'Ledger Name',
+      width: '14%',
+      align: 'left',
+      render: (item) => <span style={{ fontSize: '0.9rem', color: '#1f2937', fontWeight: 500 }}>{item.ledger_name || '—'}</span>
+    },
+    {
       key: 'createdByUserId',
       label: 'User ID',
-      width: '6%',
+      width: '8%',
       align: 'center',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>{item.createdByUserId || '-'}</span>
     },
     {
-      key: 'debit',
+      key: 'operation',
+      label: 'Type',
+      width: '8%',
+      align: 'center',
+      render: (item) => (
+        <span style={{
+          fontSize: '0.75rem',
+          padding: '2px 8px',
+          borderRadius: '12px',
+          backgroundColor: item.operation === 'insert' ? '#dcfce7' : '#dbeafe',
+          color: item.operation === 'insert' ? '#166534' : '#1e40af',
+          fontWeight: 500,
+        }}>
+          {item.operation === 'insert' ? 'New' : 'Update'}
+        </span>
+      )
+    },
+    {
+      key: 'ldebit',
       label: 'Debit',
-      width: '14%',
+      width: '8%',
       align: 'center',
+      highlightKey: 'ldebit',
       render: (item) => {
-        const isUpdated = isFieldUpdated(item, 'debit');
-        const style = isUpdated ? updatedCellStyles.debit : {};
-        return item.debit > 0 
-          ? <span style={{ color: '#16a34a', fontWeight: 600, ...style }}>{item.debit.toFixed(2)}</span>
+        return item.ldebit > 0
+          ? <span style={{ color: '#16a34a', fontWeight: 600 }}>{item.ldebit.toFixed(2)}</span>
           : <span style={{ color: '#d1d5db' }}>—</span>
       }
     },
     {
-      key: 'credit',
+      key: 'lcredit',
       label: 'Credit',
-      width: '14%',
+      width: '8%',
       align: 'center',
+      highlightKey: 'lcredit',
       render: (item) => {
-        const isUpdated = isFieldUpdated(item, 'credit');
-        const style = isUpdated ? updatedCellStyles.credit : {};
-        return item.credit > 0 
-          ? <span style={{ color: '#dc2626', fontWeight: 600, ...style }}>{item.credit.toFixed(2)}</span>
+        return item.lcredit > 0
+          ? <span style={{ color: '#dc2626', fontWeight: 600 }}>{item.lcredit.toFixed(2)}</span>
           : <span style={{ color: '#d1d5db' }}>—</span>
       }
     },
     {
-      key: 'date',
+      key: 'nextCallDate',
       label: 'Next Call Date',
-      width: '10%',
+      width: '12%',
       align: 'center',
-      render: (item) => {
-        const isUpdated = isFieldUpdated(item, 'date');
-        const style = isUpdated ? updatedCellStyles.date : {};
-        return item.date ? 
-          <span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#059669', ...style }}>{item.date}</span>
-          : <span style={{ color: '#d1d5db' }}>—</span>
-      }
+      highlightKey: 'nextCallDate',
+      render: (item) => (
+        <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+          {item.nextCallDate ? new Date(item.nextCallDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+        </span>
+      )
     },
     {
       key: 'comments',
-      label: 'Comments & Notes',
-      width: '40%',
+      label: 'Comments',
+      width: '30%',
       align: 'center',
-      render: (item) => {
-        const isUpdated = isFieldUpdated(item, 'comments');
-        const style = isUpdated ? updatedCellStyles.comments : {};
-        return item.comments ? 
-          <span style={{ fontSize: '0.9rem', color: '#555', fontStyle: 'italic', ...style }}>"{item.comments}"</span>
-          : <span style={{ color: '#d1d5db' }}>—</span>
-      }
+      highlightKey: 'comments',
+      render: (item) => (
+        <span style={{
+          fontSize: '0.85rem',
+          color: '#4b5563',
+          maxWidth: '200px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          display: 'inline-block',
+        }}>
+          {item.comments || '—'}
+        </span>
+      )
     },
   ], []);
 
@@ -167,22 +183,16 @@ export default function ViewLogPage() {
     let result = logs;
 
     if (filterType === 'credit') {
-      result = result.filter(log => log.credit > 0);
+      result = result.filter(log => log.lcredit > 0);
     } else if (filterType === 'debit') {
-      result = result.filter(log => log.debit > 0);
-    } else if (filterType === 'insert') {
-      result = result.filter(log => log.operation === 'insert');
-    } else if (filterType === 'update') {
-      result = result.filter(log => log.operation === 'update');
+      result = result.filter(log => log.ldebit > 0);
     }
 
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(log =>
         (log.ledger_name && log.ledger_name.toLowerCase().includes(lowerTerm)) ||
-        (log.ledger_id && log.ledger_id.toLowerCase().includes(lowerTerm)) ||
-        (log.group && log.group.toLowerCase().includes(lowerTerm)) ||
-        (log.comments && log.comments.toLowerCase().includes(lowerTerm))
+        (log.ledger_id && log.ledger_id.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -228,6 +238,7 @@ export default function ViewLogPage() {
         <PageLoader
           pageName="Activity Logs"
           isDataLoading={loading}
+          duration={1500}
           onComplete={() => setShowLoader(false)}
         />
       )}
@@ -297,20 +308,6 @@ export default function ViewLogPage() {
           >
             Debit
           </Button>
-          <Button 
-            variant={filterType === 'insert' ? 'primary' : 'outline'} 
-            onClick={() => { setFilterType('insert'); setCurrentPage(1); }}
-            className={filterType === 'insert' ? 'active' : ''}
-          >
-            Initial Entry
-          </Button>
-          <Button 
-            variant={filterType === 'update' ? 'primary' : 'outline'} 
-            onClick={() => { setFilterType('update'); setCurrentPage(1); }}
-            className={filterType === 'update' ? 'active' : ''}
-          >
-            Updates
-          </Button>
         </div>
       </div>
 
@@ -364,26 +361,17 @@ export default function ViewLogPage() {
                   return (
                     <tr key={item.id || item._id || rowIndex}>
                       {columns.map((col) => {
-                        const isUpdated = isFieldUpdated(item, col.key);
-                        let cellStyle = {};
-                        
-                        // Apply appropriate style based on field type
-                        if (isUpdated) {
-                          if (col.key === 'debit') cellStyle = updatedCellStyles.debit;
-                          else if (col.key === 'credit') cellStyle = updatedCellStyles.credit;
-                          else if (col.key === 'date') cellStyle = updatedCellStyles.date;
-                          else if (col.key === 'comments') cellStyle = updatedCellStyles.comments;
-                        }
-                        
+                        const highlighted = col.highlightKey && isFieldUpdated(item, col.highlightKey);
+                        const cellHighlight = highlighted ? highlightColors[col.highlightKey] : {};
                         return (
-                          <td 
-                            key={col.key} 
-                            style={{ 
-                              width: col.width, 
+                          <td
+                            key={col.key}
+                            style={{
+                              width: col.width,
                               textAlign: col.align || 'center',
                               padding: '12px 8px',
                               borderBottom: '1px solid #e5e7eb',
-                              ...cellStyle
+                              ...cellHighlight,
                             }}
                           >
                             {col.render ? col.render(item, rowIndex) : (item[col.key] !== undefined ? item[col.key] : '—')}

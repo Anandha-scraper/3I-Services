@@ -3,18 +3,17 @@ import { apiUrl } from '../utils/api';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
-  // Hydrate user from localStorage on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) setUser(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(getStoredUser);
 
   const login = (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));

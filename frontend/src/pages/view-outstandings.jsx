@@ -77,6 +77,7 @@ export default function ViewOutstandingsPage() {
         <PageLoader
           pageName="Outstandings"
           isDataLoading={loading}
+          duration={1500}
           onComplete={() => setShowLoader(false)}
         />
       )}

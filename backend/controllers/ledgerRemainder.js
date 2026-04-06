@@ -122,56 +122,47 @@ exports.update = async (req, res) => {
       });
     }
 
+    // Fetch previous data BEFORE update for comparison
+    const previousRows = await ledgerRemainderService.list({ limit: 2000 });
+    const previousData = previousRows.find(r => r.ledger_id === String(ledger_id).trim()) || {};
+
     const result = await ledgerRemainderService.updateByLedgerId(ledger_id, updateData);
 
     console.log('Update result:', result);
 
-    // Create a log entry for this update
+    // Create a log entry ONLY if nextCallDate or lastComments actually changed
     if (result.success && result.data) {
       const ledgerData = result.data;
       const userId = req.user?.userId;
 
-      // Build customer info for logging
-      const customerInfo = {};
-      for (let i = 1; i <= 3; i++) {
-        const cnameKey = `cname${i}`;
-        const cmobKey = `cmob${i}`;
-        const cemailKey = `cemail${i}`;
+      const dateChanged = String(nextCallDate || '') !== String(previousData.nextCallDate || '');
+      const commentsChanged = String(lastComments || '') !== String(previousData.lastComments || '');
 
-        if (ledgerData[cnameKey] || ledgerData[cmobKey]) {
-          customerInfo[`operator${i}`] = {
-            name: ledgerData[cnameKey] || '-',
-            mobile: ledgerData[cmobKey] || '-',
-            email: ledgerData[cemailKey] || '-',
-          };
-        }
+      if (dateChanged || commentsChanged) {
+        const changedFields = [];
+        if (dateChanged) changedFields.push('nextCallDate');
+        if (commentsChanged) changedFields.push('comments');
+
+        const logData = {
+          ledger_id: ledgerData.ledger_id,
+          ledger_name: ledgerData.ledger_name,
+          group: ledgerData.group,
+          ldebit: ledgerData.debit || 0,
+          lcredit: ledgerData.credit || 0,
+          nextCallDate: nextCallDate || '',
+          date: nextCallDate || '',
+          comments: lastComments || '',
+          operation: 'update',
+          updatedFields: changedFields,
+          userId,
+          city: ledgerData.city || '',
+        };
+
+        await ledgerLogsService.addLog(logData);
+        console.log('Log entry created for loggable field change:', changedFields);
+      } else {
+        console.log('No loggable fields changed (nextCallDate/comments), skipping log creation');
       }
-
-      // Create log entry with the updated fields
-      const logData = {
-        ledger_id: ledgerData.ledger_id,
-        ledger_name: ledgerData.ledger_name,
-        group: ledgerData.group,
-        debit: ledgerData.debit || 0,
-        credit: ledgerData.credit || 0,
-        date: nextCallDate || '', // Updated date
-        comments: lastComments || '', // Updated comments
-        previous_debit: ledgerData.debit || 0,
-        previous_credit: ledgerData.credit || 0,
-        operation: 'update',
-        userId,
-        city: ledgerData.city || '',
-      };
-
-      // Add customer info to log if available
-      if (Object.keys(customerInfo).length > 0) {
-        logData.additionalCustomers = customerInfo;
-        console.log('Customer data added to log:', customerInfo);
-      }
-
-      await ledgerLogsService.addLog(logData);
-
-      console.log('Log entry created for ledger update with customer data');
     }
 
     // Enhance response with what was updated
