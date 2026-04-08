@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import '../styles/componentstyles/datepicker.css';
 
-const DatePicker = ({ value, onChange, required = false, disabled = false, variant = 'default', className = '' }) => {
+const DatePicker = ({ value, onChange, required = false, disabled = false, variant = 'default', className = '', flow = 'default' }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -152,8 +152,17 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
         onClick={() => {
           if (!disabled) {
             setShowCalendar(true);
-            setShowYearPicker(true);
-            setShowMonthPicker(false);
+            if (flow === 'currentMonth') {
+              // Flow one: go directly to day picker with current month/year
+              setShowYearPicker(false);
+              setShowMonthPicker(false);
+              setCurrentMonth(new Date().getMonth());
+              setCurrentYear(new Date().getFullYear());
+            } else {
+              // Default flow: start with year picker
+              setShowYearPicker(true);
+              setShowMonthPicker(false);
+            }
           }
         }}
         style={isSignup ? { paddingLeft: 0, paddingRight: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' } : {}}
@@ -174,8 +183,17 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
             if (!disabled) {
               setShowCalendar(!showCalendar);
               if (!showCalendar) {
-                setShowYearPicker(true);
-                setShowMonthPicker(false);
+                if (flow === 'currentMonth') {
+                  // Flow one: go directly to day picker with current month/year
+                  setShowYearPicker(false);
+                  setShowMonthPicker(false);
+                  setCurrentMonth(new Date().getMonth());
+                  setCurrentYear(new Date().getFullYear());
+                } else {
+                  // Default flow: start with year picker
+                  setShowYearPicker(true);
+                  setShowMonthPicker(false);
+                }
               }
             }
           }}
@@ -203,15 +221,15 @@ const DatePicker = ({ value, onChange, required = false, disabled = false, varia
               </button>
 
               <div 
-                className="year-picker-trigger" 
+                className={`year-picker-trigger ${flow === 'currentMonth' ? 'pointer-events-none' : ''}`}
                 onClick={() => {
-                  if (showYearPicker || showMonthPicker) return;
+                  if (showYearPicker || showMonthPicker || flow === 'currentMonth') return;
                   setShowYearPicker(true);
                   setShowMonthPicker(false);
                 }}
               >
                 {monthNames[currentMonth]} {currentYear}
-                <ChevronDown size={14} />
+                {flow !== 'currentMonth' && <ChevronDown size={14} />}
               </div>
 
               <button

@@ -1,15 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../utils/api';
 import { AnimatedButton, Dropdown, cityOptions, COUNTRY_OPTIONS } from '../components/Button';
 import DatePicker from '../components/datepicker';
 import Loader from '../components/loader';
-import {
-  Scale, FileText, Network, Smartphone, Code, Settings,
-  CheckCircle2, ChevronRight, Zap, Briefcase, Globe, Cpu, Palette, Lock,
-  Bell, Users, FileSpreadsheet, Mail
-} from 'lucide-react';
+import { Scale, FileText, Network, Smartphone, Code, Settings,  CheckCircle2, ChevronRight, Zap, Briefcase, Globe, Cpu, Palette, Lock, Bell, Users, FileSpreadsheet, Mail } from 'lucide-react';
 import card1 from '../images/cards/card1.jpg';
 import card2 from '../images/cards/card2.jpg';
 import card3 from '../images/cards/card3.png';
@@ -27,14 +23,14 @@ import card14 from '../images/cards/card14.jpg';
 
 const CONFIG = {
   carousel: {
-    transitionSpeed: 0.7,
+    transitionSpeed: 0.6,
     autoplayInterval: 2000,
-    scaleDropoff: 0.50,
+    scaleDropoff: 0.4,
     spreadX: 40,
-    dropY: 0.90,
+    dropY: 10,
     // Card dimensions (responsive: mobile sm  / tablet md  / desktop lg )
     cardWidth: { sm: 100, md: 200, lg: 600},   // in pixels
-    cardHeight: { sm: 100, md: 450, lg: 590},  // in pixels
+    cardHeight: { sm: 100, md: 450, lg: 600},  // in pixels
   },
   theme: {
     accentColor: '#fbbf24',    // Golden amber - complements maroon
@@ -271,7 +267,11 @@ const SERVICES_CARDS = [
 export default function LoginPage() {
   const isScrolling = useRef(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  
+  // Skip loader if navigated from logout
+  const fromLogout = location.state?.fromLogout;
 
   // UI Flow State
   const [activePanel, setActivePanel] = useState(null);
@@ -592,7 +592,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <Loader />
+      {!fromLogout && <Loader />}
       <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center font-sans bg-rose-50">
       
       {/* Dynamic Background Pattern */}

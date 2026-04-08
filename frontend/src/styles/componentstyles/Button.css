@@ -701,3 +701,103 @@
 .add-customer-btn:not(:disabled):hover .add-customer-icon {
   transform: scale(1.1);
 }
+
+/* ============================================ */
+/* BACK BUTTON COMPONENT */
+/* ============================================ */
+.btn-back {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-neutral-gray-700);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50px;
+  padding: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  height: fit-content;
+  gap: 0.5rem;
+}
+
+.btn-back--with-label {
+  border-radius: 25px;
+  padding: 0.75rem 1rem 0.75rem 0.75rem;
+}
+
+.btn-back-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.btn-back:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1);
+  color: var(--color-info);
+  border-color: var(--color-info);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 71, 89, 0.2);
+}
+
+.btn-back:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-back.btn-small {
+  padding: 0.5rem;
+}
+
+.btn-back.btn-small.btn-back--with-label {
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+}
+
+.btn-back.btn-medium {
+  padding: 0.75rem;
+}
+
+.btn-back.btn-medium.btn-back--with-label {
+  padding: 0.75rem 1rem 0.75rem 0.75rem;
+}
+
+.btn-back.btn-large {
+  padding: 1rem;
+}
+
+.btn-back.btn-large.btn-back--with-label {
+  padding: 1rem 1.25rem 1rem 1rem;
+}
+
+/* Floating effect for back button when positioned absolutely */
+.back-button-container {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+}
+
+/* Responsive adjustment to prevent overlap with content */
+@media (max-width: 1024px) {
+  .back-button-container {
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .back-button-container {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+}
+
+/* Alternative positioning for dense layouts */
+.back-button-container--safe {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+}

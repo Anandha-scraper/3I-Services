@@ -104,6 +104,7 @@
   padding-bottom: 2rem;
   background: linear-gradient(135deg, var(--rem-white), var(--rem-gray-100));
   overflow-y: auto;
+  position: relative;
 }
 
 /* page header */

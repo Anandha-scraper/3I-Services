@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, FileText, MapPin, MessageSquare, AlertCircle, RefreshCw, ChevronRight, ArrowRight, TrendingDown, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import Alert from '../components/Alert';
+import { BackButton } from '../components/Button';
 import '../styles/pagestyles/Remainder.css';
 
 function formatCurrency(value) {
@@ -130,6 +132,7 @@ export function RemainderCard() {
 // ─── Full Page ───────────────────────────────────────────────────────────────
 
 export default function RemainderPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -154,6 +157,16 @@ export default function RemainderPage() {
 
   return (
     <div className="rp">
+      {/* Back Button */}
+      <div className="back-button-container--safe">
+        <BackButton 
+          onClick={() => navigate(-1)}
+          title="Go Back"
+          size="medium"
+          showLabel={true}
+        />
+      </div>
+
       {alertState && (
         <Alert
           type={alertState.type}

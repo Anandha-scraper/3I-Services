@@ -5,7 +5,8 @@ const adminOnly = require('../middleware/admin');
 const excelMasterController = require('../controllers/excelMaster');
 const clearDataController = require('../controllers/clearData');
 
-router.get('/master', authenticate, adminOnly, excelMasterController.listMaster);
+router.get('/master', authenticate, excelMasterController.listMaster);
+router.get('/master/:ledger_id', authenticate, excelMasterController.getMasterById);
 
 router.post(
   '/master/upload',

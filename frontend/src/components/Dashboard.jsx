@@ -28,7 +28,7 @@ export default function Dashboard({ activeTab, children }) {
 
   const handleLogout = async () => {
     await logout(); // calls backend to invalidate session + clears local state
-    navigate('/login');
+    navigate('/login', { state: { fromLogout: true } });
   };
 
   const handleTabChange = (tabId) => {

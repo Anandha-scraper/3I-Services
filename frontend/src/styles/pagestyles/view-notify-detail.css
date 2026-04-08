@@ -6,6 +6,7 @@
   box-sizing: border-box;
   padding: 1.6rem 0.8rem 0;
   overflow: hidden;
+  position: relative;
 }
 
 .ledger-card {
@@ -22,6 +23,7 @@
   gap: 1rem;
   box-sizing: border-box;
   overflow-y: auto;
+  position: relative;
 }
 
 .ledger-title-wrapper {
@@ -36,9 +38,9 @@
 
 .ledger-header-wrapper {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
 }
 
 
@@ -531,6 +533,88 @@
   justify-content: flex-end;
   margin-top: 1.2rem;
   flex-wrap: wrap-reverse;
+}
+
+.add-customer-card {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border: 2px dashed #0284c7;
+  color: #0c4a6e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.add-customer-card:hover {
+  background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
+  border-color: #0ea5e9;
+  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.2);
+}
+
+.customer-row-wrapper {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
+}
+
+.customer-row-wrapper .customer-details-row {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.customer-row-side-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.4rem;
+  flex-shrink: 0;
+}
+
+.customer-action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.customer-action-btn--edit {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #7dd3fc;
+}
+
+.customer-action-btn--edit:hover:not(:disabled) {
+  background: #0284c7;
+  color: white;
+}
+
+.customer-action-btn--delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.customer-action-btn--delete:hover:not(:disabled) {
+  background: #dc2626;
+  color: white;
+}
+
+.customer-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.customer-details-row .detail-card {
+  min-height: 80px;
 }
 
 @keyframes slideIn {

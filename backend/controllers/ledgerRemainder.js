@@ -86,6 +86,36 @@ exports.update = async (req, res) => {
       updateData[`cemail${i}`] = null;
     }
 
+    // Role enforcement: non-admins cannot modify already-occupied customer slots
+    if (req.user.role !== 'admin') {
+      const existingRows = await ledgerRemainderService.list({ limit: 2000 });
+      const existing = existingRows.find(r => r.ledger_id === String(ledger_id).trim()) || {};
+
+      for (let i = 1; i <= 3; i++) {
+        const incomingName  = req.body[`cname${i}`]  ? String(req.body[`cname${i}`]).trim()  : null;
+        const incomingMob   = req.body[`cmob${i}`]   ? String(req.body[`cmob${i}`]).trim()   : null;
+        const incomingEmail = req.body[`cemail${i}`] ? String(req.body[`cemail${i}`]).trim() : null;
+
+        const existingName  = existing[`cname${i}`]  || null;
+        const existingMob   = existing[`cmob${i}`]   || null;
+        const existingEmail = existing[`cemail${i}`] || null;
+
+        const slotOccupied = !!(existingName || existingMob || existingEmail);
+        const slotChanging = (
+          incomingName  !== existingName  ||
+          incomingMob   !== existingMob   ||
+          incomingEmail !== existingEmail
+        );
+
+        if (slotOccupied && slotChanging) {
+          return res.status(403).json({
+            error: 'Permission denied',
+            message: `Only admins can edit or delete existing customer data (slot ${i}).`,
+          });
+        }
+      }
+    }
+
     // Add and validate additional customer data
     const validationErrors = [];
     for (let i = 1; i <= 3; i++) {
@@ -191,6 +221,41 @@ exports.update = async (req, res) => {
     console.error('Error updating ledger remainder:', error.message);
     res.status(error.message === 'Ledger not found' ? 404 : 500).json({
       message: 'Failed to update ledger remainder',
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteCustomerSlot = async (req, res) => {
+  try {
+    const { ledger_id, slot } = req.params;
+    const slotNum = parseInt(slot, 10);
+
+    if (!ledger_id) {
+      return res.status(400).json({ error: 'Ledger ID is required' });
+    }
+
+    if (isNaN(slotNum) || slotNum < 1 || slotNum > 3) {
+      return res.status(400).json({ error: 'Slot must be 1, 2, or 3' });
+    }
+
+    const updateData = {
+      [`cname${slotNum}`]: null,
+      [`cmob${slotNum}`]: null,
+      [`cemail${slotNum}`]: null,
+    };
+
+    const result = await ledgerRemainderService.updateByLedgerId(ledger_id, updateData);
+
+    if (!result.success) {
+      return res.status(500).json({ error: 'Failed to delete customer slot' });
+    }
+
+    res.json({ success: true, message: `Customer slot ${slotNum} deleted` });
+  } catch (error) {
+    console.error('Error deleting customer slot:', error.message);
+    res.status(error.message.includes('not found') ? 404 : 500).json({
+      message: 'Failed to delete customer slot',
       error: error.message,
     });
   }

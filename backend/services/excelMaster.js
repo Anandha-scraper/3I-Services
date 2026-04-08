@@ -107,6 +107,18 @@ class ExcelMasterService {
     });
     return rows;
   }
+
+  async getByLedgerId(ledger_id) {
+    const snapshot = await this.collection
+      .where('ledger_id', '==', String(ledger_id).trim())
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    const data = snapshot.docs[0].data();
+    const picked = pickMasterFields(data);
+    if (data.ledger_id) picked.ledger_id = data.ledger_id;
+    return picked;
+  }
 }
 
 module.exports = new ExcelMasterService();

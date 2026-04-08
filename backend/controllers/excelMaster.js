@@ -146,3 +146,22 @@ exports.uploadOutstanding = async (req, res) => {
     res.status(500).json({ message: 'Upload failed', error: e.message });
   }
 };
+
+exports.getMasterById = async (req, res) => {
+  try {
+    const { ledger_id } = req.params;
+    if (!ledger_id) {
+      return res.status(400).json({ message: 'ledger_id is required' });
+    }
+
+    const record = await excelMasterService.getByLedgerId(ledger_id);
+    if (!record) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+
+    res.json({ data: record });
+  } catch (e) {
+    console.error('getMasterById:', e);
+    res.status(500).json({ message: 'Failed to fetch master record', error: e.message });
+  }
+};

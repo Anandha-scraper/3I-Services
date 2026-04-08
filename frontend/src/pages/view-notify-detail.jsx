@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { User, Landmark, TrendingDown, TrendingUp, Calendar, MessageSquare, Phone, Mail } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { User, Landmark, TrendingDown, TrendingUp, Calendar, MessageSquare, Phone, Mail, Pencil, Trash2 } from 'lucide-react';
 import DatePicker from '../components/datepicker';
-import { SaveButton, CancelButton, AddCustomerButton } from '../components/Button';
+import { SaveButton, CancelButton, AddCustomerButton, BackButton } from '../components/Button';
+import { useAuth } from '../context/AuthContext';
 import Alert from '../components/Alert';
 import PageLoader from '../components/loading';
 import { apiFetch } from '../utils/api';
@@ -10,8 +11,12 @@ import '../styles/pagestyles/view-notify-detail.css';
 
 export default function NotifyDetailPage() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const { row } = location.state || {};
   const [ledgerData, setLedgerData] = useState(row || null);
+  const [bankData, setBankData] = useState(null);
   const [customerData, setCustomerData] = useState(null);
   const [additionalCustomers, setAdditionalCustomers] = useState([]);
   const [editableDate, setEditableDate] = useState('');
@@ -96,6 +101,26 @@ export default function NotifyDetailPage() {
 
     fetchLedgerData();
   }, [row?.ledger_id]);
+
+  // Fetch bank data from Excel_master
+  useEffect(() => {
+    const fetchBankData = async () => {
+      if (!ledgerData?.ledger_id) return;
+
+      try {
+        const response = await apiFetch(`/api/excel/master/${encodeURIComponent(ledgerData.ledger_id)}`);
+        if (!response.ok) return; // Silently fail — bank info is supplemental
+        const json = await response.json();
+        if (json?.data) {
+          setBankData(json.data);
+        }
+      } catch (error) {
+        console.error('Error fetching bank data:', error);
+      }
+    };
+
+    fetchBankData();
+  }, [ledgerData?.ledger_id]);
 
   // Fetch customer data from Ledger_Remainder based on ledger_id
   useEffect(() => {
@@ -245,6 +270,63 @@ export default function NotifyDetailPage() {
     setEditingCustomerData({ name: '', mobile: '', email: '' });
   };
 
+  const handleDeleteCustomer = async (index) => {
+    // Map display index to original Firestore slot number (1-3)
+    const ledger = ledgerData;
+    let matchCount = 0;
+    let slot = null;
+    for (let i = 1; i <= 3; i++) {
+      const hasData = !!(ledger?.[`cname${i}`] || ledger?.[`cmob${i}`] || ledger?.[`cemail${i}`]);
+      if (hasData) {
+        if (matchCount === index) {
+          slot = i;
+          break;
+        }
+        matchCount++;
+      }
+    }
+
+    if (!slot) {
+      setAlert({ type: 'error', title: 'Error', message: 'Could not determine customer slot.' });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setAlert(null);
+      const response = await apiFetch(
+        `/api/ledger-remainder/${encodeURIComponent(ledgerData.ledger_id)}/customer/${slot}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to delete customer');
+      }
+
+      // Re-derive additionalCustomers from ledgerData after nulling the slot
+      const updatedLedgerData = { ...ledgerData };
+      updatedLedgerData[`cname${slot}`]  = null;
+      updatedLedgerData[`cmob${slot}`]   = null;
+      updatedLedgerData[`cemail${slot}`] = null;
+      setLedgerData(updatedLedgerData);
+
+      const remaining = [];
+      for (let i = 1; i <= 3; i++) {
+        const cn = updatedLedgerData[`cname${i}`];
+        const cm = updatedLedgerData[`cmob${i}`];
+        const ce = updatedLedgerData[`cemail${i}`];
+        if (cn || cm || ce) remaining.push({ name: cn || '', mobile: cm || '', email: ce || '' });
+      }
+      setAdditionalCustomers(remaining);
+      setAlert({ type: 'success', title: 'Deleted', message: 'Customer removed successfully.' });
+    } catch (error) {
+      setAlert({ type: 'error', title: 'Delete Failed', message: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSave = async (customersOverride) => {
     try {
       setIsLoading(true);
@@ -384,43 +466,54 @@ export default function NotifyDetailPage() {
       )}
 
       <div className="ledger-card">
-          <div className="ledger-header-wrapper">
-            <div className="ledger-title-wrapper">
-              <User className="ledger-icon" size={24} />
-              <h2>{ledgerData ? ledgerData.ledger_name : 'No ledger selected'}</h2>
-              {ledgerData && ledgerData.group && (
-                <span className="ledger-group-badge">{ledgerData.group}</span>
-              )}
-            </div>
+        {/* Back button — positioned absolutely in the top-right of ledger-card */}
+        <div style={{ position: 'absolute', top: '1.4rem', right: '1.4rem', zIndex: 1 }}>
+          <BackButton
+            onClick={() => navigate(-1)}
+            title="Go Back"
+            size="medium"
+            showLabel={true}
+          />
+        </div>
 
-            {ledgerData && (
-              <div className="ledger-summary-cards">
-                <div className="summary-card summary-card--blue">
-                  <Landmark className="summary-card-icon" size={20} />
-                  <div className="summary-card-content">
-                    <div className="bank-name">{ledgerData.bank || '—'}</div>
-                  </div>
-                </div>
-
-                <div className="summary-card summary-card--purple">
-                  <Landmark className="summary-card-icon" size={20} />
-                  <div className="summary-card-content">
-                    <div className="bank-address">{ledgerData.bankadd1 || '—'}</div>
-                  </div>
-                </div>
-
-                <div className="summary-card summary-card--orange">
-                  <Landmark className="summary-card-icon" size={20} />
-                  <div className="summary-card-content">
-                    <div className="bank-address">{ledgerData.bankadd2 || '—'}</div>
-                  </div>
-                </div>
-              </div>
+        {/* Header: title + group badge + bank summary cards */}
+        <div className="ledger-header-wrapper">
+          <div className="ledger-title-wrapper">
+            <User className="ledger-icon" size={24} />
+            <h2>{ledgerData ? ledgerData.ledger_name : 'No ledger selected'}</h2>
+            {ledgerData && ledgerData.group && (
+              <span className="ledger-group-badge">{ledgerData.group}</span>
             )}
           </div>
 
-          {alert && (
-            <Alert
+          {ledgerData && (
+            <div className="ledger-summary-cards">
+              <div className="summary-card summary-card--blue">
+                <Landmark className="summary-card-icon" size={20} />
+                <div className="summary-card-content">
+                  <div className="bank-name">{bankData?.bank || ledgerData.bank || '—'}</div>
+                </div>
+              </div>
+
+              <div className="summary-card summary-card--purple">
+                <Landmark className="summary-card-icon" size={20} />
+                <div className="summary-card-content">
+                  <div className="bank-address">{bankData?.bankadd1 || ledgerData.bankadd1 || '—'}</div>
+                </div>
+              </div>
+
+              <div className="summary-card summary-card--orange">
+                <Landmark className="summary-card-icon" size={20} />
+                <div className="summary-card-content">
+                  <div className="bank-address">{bankData?.bankadd2 || ledgerData.bankadd2 || '—'}</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {alert && (
+          <Alert
               type={alert.type}
               title={alert.title}
               message={alert.message}
@@ -525,6 +618,7 @@ export default function NotifyDetailPage() {
                       <DatePicker 
                         value={editableDate}
                         onChange={setEditableDate}
+                        flow="currentMonth"
                       />
                     </div>
                   </div>
@@ -610,46 +704,55 @@ export default function NotifyDetailPage() {
                     <div key={index}>
                       {editingCustomerIndex === index ? (
                         <>
-                          <div className="customer-details-row">
-                            <div className="detail-card customer-detail-name-card">
-                              <div className="detail-header">
-                                <span className="detail-title">Customer Name</span>
-                                <User className="detail-icon" size={20} />
+                          <div className="customer-row-wrapper">
+                            {isAdmin && (
+                              <div className="customer-row-side-actions">
+                                <button className="customer-action-btn customer-action-btn--edit" disabled={isLoading} title="Cancel editing" onClick={handleCancelEditCustomer}>
+                                  <Pencil size={16} />
+                                </button>
                               </div>
-                              <input
-                                type="text"
-                                value={editingCustomerData.name}
-                                onChange={(e) => setEditingCustomerData({ ...editingCustomerData, name: e.target.value })}
-                                placeholder="Enter name"
-                                className="customer-input"
-                                autoFocus
-                              />
-                            </div>
-                            <div className="detail-card customer-detail-phone-card">
-                              <div className="detail-header">
-                                <span className="detail-title">Mobile</span>
-                                <Phone className="detail-icon" size={20} />
+                            )}
+                            <div className="customer-details-row">
+                              <div className="detail-card customer-detail-name-card">
+                                <div className="detail-header">
+                                  <span className="detail-title">Customer Name</span>
+                                  <User className="detail-icon" size={20} />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={editingCustomerData.name}
+                                  onChange={(e) => setEditingCustomerData({ ...editingCustomerData, name: e.target.value })}
+                                  placeholder="Enter name"
+                                  className="customer-input"
+                                  autoFocus
+                                />
                               </div>
-                              <input
-                                type="text"
-                                value={editingCustomerData.mobile}
-                                onChange={(e) => setEditingCustomerData({ ...editingCustomerData, mobile: e.target.value })}
-                                placeholder="Enter mobile"
-                                className="customer-input"
-                              />
-                            </div>
-                            <div className="detail-card customer-detail-email-card">
-                              <div className="detail-header">
-                                <span className="detail-title">Email</span>
-                                <Mail className="detail-icon" size={20} />
+                              <div className="detail-card customer-detail-phone-card">
+                                <div className="detail-header">
+                                  <span className="detail-title">Mobile</span>
+                                  <Phone className="detail-icon" size={20} />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={editingCustomerData.mobile}
+                                  onChange={(e) => setEditingCustomerData({ ...editingCustomerData, mobile: e.target.value })}
+                                  placeholder="Enter mobile"
+                                  className="customer-input"
+                                />
                               </div>
-                              <input
-                                type="email"
-                                value={editingCustomerData.email}
-                                onChange={(e) => setEditingCustomerData({ ...editingCustomerData, email: e.target.value })}
-                                placeholder="Enter email (optional)"
-                                className="customer-input"
-                              />
+                              <div className="detail-card customer-detail-email-card">
+                                <div className="detail-header">
+                                  <span className="detail-title">Email</span>
+                                  <Mail className="detail-icon" size={20} />
+                                </div>
+                                <input
+                                  type="email"
+                                  value={editingCustomerData.email}
+                                  onChange={(e) => setEditingCustomerData({ ...editingCustomerData, email: e.target.value })}
+                                  placeholder="Enter email (optional)"
+                                  className="customer-input"
+                                />
+                              </div>
                             </div>
                           </div>
                           <div className="form-action-buttons-center">
@@ -658,33 +761,49 @@ export default function NotifyDetailPage() {
                           </div>
                         </>
                       ) : (
-                        <div
-                          className="customer-details-row customer-details-row--clickable"
-                          onClick={() => handleEditCustomer(index)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => e.key === 'Enter' && handleEditCustomer(index)}
-                        >
-                          <div className="detail-card customer-detail-name-card">
-                            <div className="detail-header">
-                              <span className="detail-title">Customer Name</span>
-                              <User className="detail-icon" size={20} />
+                        <div className="customer-row-wrapper">
+                          {isAdmin && (
+                            <div className="customer-row-side-actions">
+                              <button
+                                className="customer-action-btn customer-action-btn--edit"
+                                onClick={() => handleEditCustomer(index)}
+                                disabled={isLoading}
+                                title="Edit customer"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                className="customer-action-btn customer-action-btn--delete"
+                                onClick={() => handleDeleteCustomer(index)}
+                                disabled={isLoading}
+                                title="Delete customer"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </div>
-                            <div className="detail-value">{customer.name || '—'}</div>
-                          </div>
-                          <div className="detail-card customer-detail-phone-card">
-                            <div className="detail-header">
-                              <span className="detail-title">Mobile</span>
-                              <Phone className="detail-icon" size={20} />
+                          )}
+                          <div className="customer-details-row">
+                            <div className="detail-card customer-detail-name-card">
+                              <div className="detail-header">
+                                <span className="detail-title">Customer Name</span>
+                                <User className="detail-icon" size={20} />
+                              </div>
+                              <div className="detail-value">{customer.name || '—'}</div>
                             </div>
-                            <div className="detail-value">{customer.mobile || '—'}</div>
-                          </div>
-                          <div className="detail-card customer-detail-email-card">
-                            <div className="detail-header">
-                              <span className="detail-title">Email</span>
-                              <Mail className="detail-icon" size={20} />
+                            <div className="detail-card customer-detail-phone-card">
+                              <div className="detail-header">
+                                <span className="detail-title">Mobile</span>
+                                <Phone className="detail-icon" size={20} />
+                              </div>
+                              <div className="detail-value">{customer.mobile || '—'}</div>
                             </div>
-                            <div className="detail-value">{customer.email || '—'}</div>
+                            <div className="detail-card customer-detail-email-card">
+                              <div className="detail-header">
+                                <span className="detail-title">Email</span>
+                                <Mail className="detail-icon" size={20} />
+                              </div>
+                              <div className="detail-value">{customer.email || '—'}</div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -759,11 +878,15 @@ export default function NotifyDetailPage() {
               ) : (
                 <>
                   {additionalCustomers.length < 3 && (
-                    <AddCustomerButton
-                      onClick={handleAddCustomer}
-                      disabled={isLoading}
-                      title="Add another customer"
-                    />
+                    <div className="customer-details-row">
+                      <div className="detail-card add-customer-card" onClick={handleAddCustomer} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <AddCustomerButton
+                          onClick={handleAddCustomer}
+                          disabled={isLoading}
+                          title="Add another customer"
+                        />
+                      </div>
+                    </div>
                   )}
                 </>
               )}

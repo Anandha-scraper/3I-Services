@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search, ArrowLeft } from 'lucide-react';
 import '../styles/componentstyles/Button.css';
 
 // Animated Submit Button with border animation
@@ -313,6 +313,22 @@ export const AddCustomerButton = ({ onClick, disabled = false, className = '', t
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
       <span>Add Customer</span>
+    </button>
+  );
+};
+
+// Back Button Component
+export const BackButton = ({ onClick, className = '', title = 'Go Back', size = 'medium', showLabel = false }) => {
+  return (
+    <button 
+      className={`btn btn-back btn-${size} ${showLabel ? 'btn-back--with-label' : ''} ${className}`}
+      onClick={onClick}
+      type="button"
+      title={title}
+      aria-label={title}
+    >
+      <ArrowLeft size={size === 'small' ? 16 : size === 'large' ? 24 : 20} />
+      {showLabel && <span className="btn-back-label">Back</span>}
     </button>
   );
 };

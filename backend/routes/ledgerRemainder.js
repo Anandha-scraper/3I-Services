@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const authenticate = require('../middleware/auth');
+const adminOnly = require('../middleware/admin');
 const ledgerRemainderController = require('../controllers/ledgerRemainder');
 
 router.get('/', authenticate, ledgerRemainderController.list);
 router.get('/upcoming', authenticate, ledgerRemainderController.upcoming);
 router.put('/:ledger_id', authenticate, ledgerRemainderController.update);
+router.delete('/:ledger_id/customer/:slot', authenticate, adminOnly, ledgerRemainderController.deleteCustomerSlot);
 
 // Debug endpoint to test customer data
 router.post('/debug/test', authenticate, (req, res) => {
