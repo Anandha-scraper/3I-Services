@@ -539,7 +539,7 @@
 
 @media (max-width: 640px) {
   .ub__cards,
-  .ub__cards-integrated { grid-template-columns: 1fr; }
+  .ub__cards-integrated { grid-template-columns: repeat(2, 1fr); }
 
   .ub__greeting {
     flex-direction: column;
@@ -553,5 +553,5 @@
   .ub__greeting-title { font-size: 1.25rem; }
   .ub__greeting-role  { font-size: 0.8125rem; }
 
-  .ad__panel--open { padding: 1rem; margin-top: 0.75rem; margin-right: 1.5rem; margin-left: 1.5rem; }
+  .ad__panel--open { padding: 1rem; margin: 0.75rem 1rem; width: calc(100% - 2rem); }
 }

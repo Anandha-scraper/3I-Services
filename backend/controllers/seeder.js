@@ -10,7 +10,7 @@ exports.seedAdmin = async (req, res) => {
     const lastName = process.env.ADMIN_LASTNAME || req.body.lastName || 'User';
     const fatherName = process.env.ADMIN_FATHERNAME || req.body.fatherName || 'N/A';
     const dob = process.env.ADMIN_DOB || req.body.dob || '1990-01-01';
-    const email = process.env.ADMIN_EMAIL || req.body.email || 'admin@example.com';
+    const email = process.env.EMAIL_USER || req.body.email || 'admin@example.com';
     const countryCode = process.env.ADMIN_COUNTRY_CODE || req.body.countryCode || '+91';
 
     // Validation

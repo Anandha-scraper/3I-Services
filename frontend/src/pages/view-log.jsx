@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { AlertCircle, ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, X, ArrowLeft } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { Button, SearchBar } from '../components/Button';
 import DatePicker from '../components/datepicker';
 import PageLoader from '../components/loading';
+import Alert from '../components/Alert';
 import '../styles/pagestyles/view-log.css';
+import '../styles/componentstyles/Alert.css';
 
 // Helper function to check if a field was updated in this log entry
 const isFieldUpdated = (item, fieldName) => {
@@ -29,10 +32,11 @@ const highlightColors = {
 };
 
 export default function ViewLogPage() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState(null);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,6 +53,7 @@ export default function ViewLogPage() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
+      setAlert(null);
       const res = await apiFetch('/api/ledger-logs?limit=1000');
 
       if (!res.ok) {
@@ -57,9 +62,14 @@ export default function ViewLogPage() {
 
       const data = await res.json();
       setLogs(Array.isArray(data.logs) ? data.logs : []);
-      setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to load data');
+      setAlert({
+        type: 'error',
+        title: 'Load Failed',
+        message: err.message || 'Failed to load activity logs',
+        onConfirm: () => { setAlert(null); fetchLogs(); },
+        onCancel: () => setAlert(null),
+      });
       setLogs([]);
     } finally {
       setLoading(false);
@@ -243,8 +253,22 @@ export default function ViewLogPage() {
         />
       )}
 
+      {alert && (
+        <Alert
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+          onConfirm={alert.onConfirm}
+          onCancel={alert.onCancel}
+        />
+      )}
+
       <div className="view-log-header">
         <h2>Ledger Activity Logs</h2>
+        <button className="page-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          Back
+        </button>
       </div>
 
       <div className="view-log-filters">
@@ -254,7 +278,7 @@ export default function ViewLogPage() {
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
         />
-        <div className="view-log-date-filters" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div className="view-log-date-filters" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500 }}>From</span>
           <DatePicker
             value={dateFromInput}
@@ -315,11 +339,6 @@ export default function ViewLogPage() {
         {loading ? (
           <div className="view-log-empty">
             <p>Loading activity logs...</p>
-          </div>
-        ) : error ? (
-          <div className="view-log-error">
-            <AlertCircle size={24} style={{ display: 'inline', marginRight: '8px' }} />
-            {error}
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="view-log-empty">

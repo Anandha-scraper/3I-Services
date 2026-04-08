@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../utils/api';
+import Alert from '../components/Alert';
 import { AnimatedButton, Dropdown, cityOptions, COUNTRY_OPTIONS } from '../components/Button';
 import DatePicker from '../components/datepicker';
 import Loader from '../components/loader';
@@ -29,8 +30,8 @@ const CONFIG = {
     spreadX: 40,
     dropY: 10,
     // Card dimensions (responsive: mobile sm  / tablet md  / desktop lg )
-    cardWidth: { sm: 100, md: 200, lg: 600},   // in pixels
-    cardHeight: { sm: 100, md: 450, lg: 600},  // in pixels
+    cardWidth: { sm: 260, md: 340, lg: 600},   // in pixels
+    cardHeight: { sm: 380, md: 500, lg: 600},  // in pixels
   },
   theme: {
     accentColor: '#fbbf24',    // Golden amber - complements maroon
@@ -269,6 +270,20 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Responsive card size
+  const [cardSize, setCardSize] = useState('lg');
+  useEffect(() => {
+    const updateSize = () => {
+      const w = window.innerWidth;
+      if (w < 640) setCardSize('sm');
+      else if (w < 1024) setCardSize('md');
+      else setCardSize('lg');
+    };
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
   // UI Flow State
   const [activePanel, setActivePanel] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -310,15 +325,21 @@ export default function LoginPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadedImages, setLoadedImages] = useState({});
-  const [alert, setAlert] = useState({ show: false, type: '', message: '' });
+  const [alert, setAlert] = useState(null);
 
   const OTP_VALID_TIME = 120;
   const OTP_RESEND_TIME = 60;
 
-  const showAlert = (type, message) => {
-    setAlert({ show: true, type, message });
-    setTimeout(() => setAlert({ show: false, type: '', message: '' }), 4000);
-  };
+  const showAlert = useCallback((type, message) => {
+    const titleMap = { error: 'Error', success: 'Success' };
+    setAlert({
+      type,
+      title: titleMap[type] || type,
+      message,
+      onConfirm: () => setAlert(null),
+      onCancel: () => setAlert(null),
+    });
+  }, []);
 
   const handleImageLoad = (cardId) => {
     setLoadedImages(prev => ({ ...prev, [cardId]: true }));
@@ -588,7 +609,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <Loader />
+      {!location.state?.fromLogout && <Loader />}
       <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center font-sans bg-rose-50">
       
       {/* Dynamic Background Pattern */}
@@ -604,13 +625,6 @@ export default function LoginPage() {
           maskImage: "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
         }}
       />
-
-      {/* Alert Banner */}
-      <div className={`absolute top-0 left-0 w-full z-[100] transition-all duration-500 ${alert.show ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-        <div className={`p-4 text-center text-white font-bold tracking-wide shadow-xl ${alert.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`}>
-          {alert.message}
-        </div>
-      </div>
 
       {/* Top Right Toggle Button */}
       <button
@@ -800,7 +814,8 @@ export default function LoginPage() {
           
           const absOffset = Math.abs(offset);
           const scale = Math.max(0.4, 1 - absOffset * CONFIG.carousel.scaleDropoff);
-          const translateXpx = offset * CONFIG.carousel.spreadX * 10; // Convert to pixels (approx)
+          const spreadMultiplier = cardSize === 'sm' ? 4 : cardSize === 'md' ? 7 : 10;
+          const translateXpx = offset * CONFIG.carousel.spreadX * spreadMultiplier;
           const translateY = absOffset * CONFIG.carousel.dropY; 
           const zIndex = 50 - absOffset;
           const opacity = Math.max(0, 1 - absOffset * 0.35);
@@ -823,16 +838,16 @@ export default function LoginPage() {
               <div 
                   className={`relative shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-700 cursor-default`}
                   style={{
-                    width: `${CONFIG.carousel.cardWidth.lg}px`,
-                    height: `${CONFIG.carousel.cardHeight.lg}px`,
+                    width: `${CONFIG.carousel.cardWidth[cardSize]}px`,
+                    height: `${CONFIG.carousel.cardHeight[cardSize]}px`,
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%)',
                   }}
                 >
                   {/* Top Image Section */}
-                  <div 
+                  <div
                     className="relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-100"
                     style={{
-                      height: '384px'
+                      height: cardSize === 'sm' ? '180px' : cardSize === 'md' ? '260px' : '384px'
                     }}
                   >
                     <img 
@@ -931,6 +946,16 @@ export default function LoginPage() {
       </div>
 
     </div>
+
+    {alert && (
+      <Alert
+        type={alert.type}
+        title={alert.title}
+        message={alert.message}
+        onConfirm={alert.onConfirm}
+        onCancel={alert.onCancel}
+      />
+    )}
     </>
   );
 }

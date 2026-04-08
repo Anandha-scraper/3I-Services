@@ -1,35 +1,18 @@
-import { useState, useRef, useEffect } from 'react';
-import { Upload, FileUp, Settings, Trash2, ChevronDown, Check, AlertTriangle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Upload, FileUp, Check, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 import Alert from '../components/Alert';
 import { apiFetch } from '../utils/api';
 import '../styles/pagestyles/excel.css';
 
 export default function ExcelPage() {
+  const navigate = useNavigate();
   const [activeCard, setActiveCard] = useState(null);
   const fileInputRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
   const [alert, setAlert] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [fileType, setFileType] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDropdown]);
 
   const cards = [
     {
@@ -62,20 +45,33 @@ export default function ExcelPage() {
 
     const card = cards.find(c => c.id === fileType);
     setUploading(true);
+    setUploadProgress(0);
     setAlert({
       type: 'uploading',
       title: 'Uploading',
       message: `Uploading ${file.name}...`,
     });
 
+    // Animate progress 0 → 80% over ~2s while waiting
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 80) { clearInterval(progressInterval); return 80; }
+        return prev + 2;
+      });
+    }, 50);
+
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await apiFetch(card.endpoint, {
-        method: 'POST',
-        body: formData,
-      });
+      // Enforce minimum 2.5s display time for the uploading alert
+      const [response] = await Promise.all([
+        apiFetch(card.endpoint, {
+          method: 'POST',
+          body: formData,
+        }),
+        new Promise(resolve => setTimeout(resolve, 2500)),
+      ]);
 
       // Try to parse response as JSON
       let data;
@@ -106,9 +102,12 @@ export default function ExcelPage() {
         throw new Error(data?.message || `Upload failed with status ${response.status}`);
       }
 
+      // Snap progress to 100% on success
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
       // Handle outstanding upload success with validation results
       if (fileType === 'outstanding') {
-        const foundCount = data.found?.length || 0;
         const notFoundCount = data.notFound?.length || 0;
 
         // Always show success on successful upload response.
@@ -128,7 +127,6 @@ export default function ExcelPage() {
           ),
           onConfirm: () => {
             setAlert(null);
-            setUploading(false);
             setActiveCard(null);
             if (fileInputRef.current) fileInputRef.current.value = '';
           },
@@ -141,13 +139,14 @@ export default function ExcelPage() {
           message: `${data.inserted} records imported from ${data.fileName}`,
           onConfirm: () => {
             setAlert(null);
-            setUploading(false);
             setActiveCard(null);
             if (fileInputRef.current) fileInputRef.current.value = '';
           },
         });
       }
     } catch (error) {
+      clearInterval(progressInterval);
+      setUploadProgress(0);
       console.error('Upload error:', error);
       setAlert({
         type: 'error',
@@ -155,12 +154,10 @@ export default function ExcelPage() {
         message: error.message || 'An error occurred during upload',
         onCancel: () => {
           setAlert(null);
-          setUploading(false);
           setActiveCard(null);
         },
         onConfirm: () => {
           setAlert(null);
-          setUploading(false);
           setActiveCard(null);
           if (fileInputRef.current) fileInputRef.current.value = '';
         },
@@ -168,110 +165,14 @@ export default function ExcelPage() {
     }
   };
 
-  const handleClearData = async (collection) => {
-    const collectionNames = {
-      'master': 'Excel Master Data',
-      'remainder': 'Ledger Remainder',
-      'logs': 'Ledger Logs',
-      'all': 'All Data (Master, Remainder & Logs)'
-    };
-
-    setShowDropdown(false);
-
-    setAlert({
-      type: 'confirm',
-      title: 'Confirm Delete',
-      message: `Are you sure you want to delete ${collectionNames[collection]}? This action cannot be undone.`,
-      onCancel: () => setAlert(null),
-      onConfirm: async () => {
-        setAlert({
-          type: 'uploading',
-          title: 'Deleting',
-          message: `Deleting ${collectionNames[collection]}...`,
-        });
-
-        try {
-          const response = await apiFetch(`/api/excel/clear/${collection}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data?.message || 'Delete failed');
-          }
-
-          setAlert({
-            type: 'success',
-            title: 'Delete Successful',
-            message: data.message || `${collectionNames[collection]} deleted successfully`,
-            onConfirm: () => setAlert(null),
-          });
-        } catch (error) {
-          console.error('Delete error:', error);
-          setAlert({
-            type: 'error',
-            title: 'Delete Failed',
-            message: error.message || 'An error occurred during deletion',
-            onConfirm: () => setAlert(null),
-          });
-        }
-      },
-    });
-  };
-
   return (
     <div className="excel-page">
-      {/* Database Management Dropdown */}
-      <div className="db-management-container" ref={dropdownRef}>
-        <button
-          className="db-management-btn"
-          onClick={() => setShowDropdown(!showDropdown)}
-          title="Database Management"
-        >
-          <Settings size={20} />
-          <span>Manage Data</span>
-          <ChevronDown size={16} className={showDropdown ? 'rotate' : ''} />
+      {/* Top bar: back button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem 0' }}>
+        <button className="page-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          Back
         </button>
-
-        {showDropdown && (
-          <div className="db-dropdown">
-            <div className="dropdown-header">
-              <Trash2 size={18} />
-              <span>Clear Database Collections</span>
-            </div>
-            <button
-              className="dropdown-item danger"
-              onClick={() => handleClearData('master')}
-            >
-              <Trash2 size={16} />
-              <span>Clear Excel Master</span>
-            </button>
-            <button
-              className="dropdown-item danger"
-              onClick={() => handleClearData('remainder')}
-            >
-              <Trash2 size={16} />
-              <span>Clear Ledger Remainder</span>
-            </button>
-            <button
-              className="dropdown-item danger"
-              onClick={() => handleClearData('logs')}
-            >
-              <Trash2 size={16} />
-              <span>Clear Ledger Logs</span>
-            </button>
-            <div className="dropdown-divider"></div>
-            <button
-              className="dropdown-item danger-high"
-              onClick={() => handleClearData('all')}
-            >
-              <Trash2 size={16} />
-              <span>Clear All Data</span>
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="portal-cards-grid">
@@ -317,6 +218,7 @@ export default function ExcelPage() {
           message={alert.message}
           onConfirm={alert.onConfirm}
           onCancel={alert.onCancel}
+          progress={uploadProgress}
         />
       )}
     </div>

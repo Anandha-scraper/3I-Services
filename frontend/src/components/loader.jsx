@@ -98,25 +98,25 @@ export default function Loader({ onComplete }) {
 
   return (
     <div ref={loaderRef} className="fixed inset-0 z-[9999] bg-rose-50 flex flex-col items-center justify-center will-change-transform">
-      <div className="relative inline-block px-4 md:px-8">
-        <h1 
+      <div className="relative inline-block px-4 md:px-8 max-w-[calc(100vw-2rem)]">
+        <h1
           ref={brandTextRef}
-          className="water-fill text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter uppercase text-center" 
+          className="water-fill text-3xl sm:text-5xl md:text-8xl font-bold tracking-tighter uppercase text-center break-words"
           data-text={loaderConfig.text}
         >
           {loaderConfig.text}
         </h1>
 
-        <div 
-          ref={progressContainerRef} 
-          className="absolute bottom-1 -right-2 sm:-right-8 flex items-baseline space-x-1.5 transform translate-y-full"
+        <div
+          ref={progressContainerRef}
+          className="absolute bottom-1 right-0 sm:-right-8 flex items-baseline space-x-1.5 transform translate-y-full"
         >
           <span className="text-rose-700/70 font-semibold text-[8px] sm:text-[10px] tracking-[0.2em] uppercase">
             Loading
           </span>
-          <span 
-            ref={progressTextRef} 
-            className="text-rose-950 font-bold text-lg sm:text-2xl tabular-nums tracking-tighter leading-none"
+          <span
+            ref={progressTextRef}
+            className="text-rose-950 font-bold text-base sm:text-2xl tabular-nums tracking-tighter leading-none"
           >
             0%
           </span>

@@ -1,16 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
+import Alert from '../components/Alert';
 import { SearchBar } from '../components/Button';
 import '../styles/pagestyles/view-notify.css';
+import '../styles/componentstyles/Alert.css';
 
 export default function NotifyPage() {
   const [ledgers, setLedgers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
@@ -27,9 +30,15 @@ export default function NotifyPage() {
         (a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
       );
       setLedgers(sortedLedgers);
-      setError(null);
+      setAlert(null);
     } catch (err) {
-      setError(err.message || 'Failed to load data');
+      setAlert({
+        type: 'error',
+        title: 'Load Failed',
+        message: err.message || 'Failed to load ledger data',
+        onConfirm: () => { setAlert(null); fetchLedgerRemainders(); },
+        onCancel: () => setAlert(null),
+      });
       setLedgers([]);
     } finally {
       setLoading(false);
@@ -107,7 +116,15 @@ export default function NotifyPage() {
         />
       )}
 
-      {error && <div className="notify-error">⚠️ {error}</div>}
+      {alert && (
+        <Alert
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+          onConfirm={alert.onConfirm}
+          onCancel={alert.onCancel}
+        />
+      )}
 
       <div className="notify-header">
         <div className="notify-header-text">
@@ -120,6 +137,10 @@ export default function NotifyPage() {
           placeholder="Search by ledger name or date (e.g. Apr, 2026, 26)..."
           className="notify-search"
         />
+        <button className="page-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          Back
+        </button>
       </div>
 
       <div className="notify-table-section">

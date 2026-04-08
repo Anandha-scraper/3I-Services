@@ -658,3 +658,35 @@
   color: #9ca3af;
   font-family: 'Courier New', monospace;
 }
+
+/* ========== SHARED PAGE BACK BUTTON (desktop only) ========== */
+.page-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.page-back-btn:hover {
+  background: #f9fafb;
+  border-color: #cbd5e1;
+}
+
+.page-back-btn:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 767px) {
+  .page-back-btn {
+    display: none;
+  }
+}

@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
+import Alert from '../components/Alert';
 import '../styles/pagestyles/view-outstandings.css';
+import '../styles/componentstyles/Alert.css';
 
 function formatCurrency(value) {
   if (value == null || value === '') return '—';
@@ -13,14 +17,14 @@ function formatCurrency(value) {
 
 
 export default function ViewOutstandingsPage() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
-  const [error, setError] = useState(null);
-
+  const [alert, setAlert] = useState(null);
 
   const load = useCallback(async () => {
-    setError(null);
+    setAlert(null);
     setLoading(true);
     try {
       const res = await apiFetch('/api/ledger-remainder?limit=1000');
@@ -30,7 +34,13 @@ export default function ViewOutstandingsPage() {
       }
       setRows(Array.isArray(data.rows) ? data.rows : []);
     } catch (e) {
-      setError(e.message || 'Failed to load');
+      setAlert({
+        type: 'error',
+        title: 'Load Failed',
+        message: e.message || 'Failed to load outstanding data',
+        onConfirm: () => { setAlert(null); load(); },
+        onCancel: () => setAlert(null),
+      });
       setRows([]);
     } finally {
       setLoading(false);
@@ -82,10 +92,22 @@ export default function ViewOutstandingsPage() {
         />
       )}
 
-      {error && <div className="outstandings-error">{error}</div>}
-      
+      {alert && (
+        <Alert
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+          onConfirm={alert.onConfirm}
+          onCancel={alert.onCancel}
+        />
+      )}
+
       <div className="outstandings-header">
-        <h1>Outstanding Data : </h1>
+        <h1>Outstanding Data :</h1>
+        <button className="page-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          Back
+        </button>
       </div>
 
       <div className="outstandings-table-section">

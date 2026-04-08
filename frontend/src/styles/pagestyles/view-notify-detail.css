@@ -684,3 +684,25 @@
     gap: 0.6rem;
   }
 }
+
+@media (max-width: 640px) {
+  .ledger-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .ledger-title-wrapper {
+    width: 100%;
+  }
+
+  .ledger-summary-cards {
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ledger-header-wrapper > a,
+  .ledger-header-wrapper > button {
+    align-self: flex-end;
+  }
+}

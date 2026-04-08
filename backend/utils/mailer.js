@@ -27,16 +27,10 @@ const createTransporter = () => {
 const sendEmailToAdmin = async ({ requestId, firstName, lastName, email, phone, city }) => {
   console.log('[INFO] Starting email send to admin...');
   console.log(`[DEBUG] EMAIL_USER: ${process.env.EMAIL_USER}`);
-  console.log(`[DEBUG] ADMIN_EMAIL: ${process.env.ADMIN_EMAIL}`);
   console.log(`[DEBUG] EMAIL_PASSWORD exists: ${!!process.env.EMAIL_PASSWORD}`);
-  
+
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
     console.error('[ERROR] Email USER or PASSWORD not configured');
-    return;
-  }
-  
-  if (!process.env.ADMIN_EMAIL) {
-    console.error('[ERROR] ADMIN_EMAIL not configured in environment variables');
     return;
   }
 
@@ -106,12 +100,12 @@ const sendEmailToAdmin = async ({ requestId, firstName, lastName, email, phone, 
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
+      to: process.env.EMAIL_USER,
       subject: 'New User Registration Request - 3i Services - 7FS',
       html: htmlContent
     };
 
-    console.log(`[INFO] Sending email FROM: ${mailOptions.from} TO: ${mailOptions.to}`);
+    console.log(`[INFO] Sending signup notification FROM: ${mailOptions.from} TO: ${mailOptions.to}`);
     const info = await transporter.sendMail(mailOptions);
     console.log('[SUCCESS] Admin notification email sent. Message ID:', info.messageId);
   } catch (error) {

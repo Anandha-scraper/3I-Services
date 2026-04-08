@@ -4,14 +4,16 @@ const fs = require('fs');
 require('dotenv').config();
 
 const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
-if (!fs.existsSync(serviceAccountPath)) {
-  console.error('add serviceAccountKey.json to backend/config/');
-  process.exit(1);
+let credential;
+if (fs.existsSync(serviceAccountPath)) {
+  const serviceAccount = require(serviceAccountPath);
+  credential = admin.credential.cert(serviceAccount);
+} else {
+  // Application Default Credentials — used automatically on Cloud Run / Firebase App Hosting
+  credential = admin.credential.applicationDefault();
 }
-const serviceAccount = require(serviceAccountPath);
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+
+admin.initializeApp({ credential });
 console.log("Firebase Connected");
 const db = admin.firestore();
 const auth = admin.auth();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Menu, ArrowLeft } from 'lucide-react';
 import Sidebar from './sidebar';
 import { useAuth } from '../context/AuthContext';
 import '../styles/componentstyles/Dashboard.css';
@@ -35,6 +35,19 @@ export default function Dashboard({ activeTab, children }) {
     navigate(`/${tabId}`);
   };
 
+  const PAGE_TITLES = {
+    home: '3i Services',
+    view: 'Ledger View',
+    'view-master': 'Master Data',
+    notify: 'Notifications',
+    'view-notify-detail': 'Notification Detail',
+    'view-log': 'Activity Logs',
+    'view-outstandings': 'Outstandings',
+    excel: 'Excel Upload',
+    profile: 'Profile',
+  };
+  const pageTitle = PAGE_TITLES[activeTab] || '3i Services';
+
   return (
     <div className="common-dashboard">
       <Sidebar
@@ -54,7 +67,13 @@ export default function Dashboard({ activeTab, children }) {
             <button className="mobile-menu-btn" onClick={toggleSidebar} aria-label="Open Menu">
               <Menu size={24} />
             </button>
-            <h1 className="mobile-app-title">3i Services</h1>
+            <h1 className="mobile-app-title">{pageTitle}</h1>
+            {activeTab !== 'home' && (
+              <button className="mobile-back-btn" onClick={() => navigate(-1)} aria-label="Go back">
+                <ArrowLeft size={16} />
+                Back
+              </button>
+            )}
           </div>
         )}
         <div className="common-dashboard-body">

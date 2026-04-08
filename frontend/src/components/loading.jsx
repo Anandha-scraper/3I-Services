@@ -105,16 +105,16 @@ const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, d
           <div className="text-sm font-medium tracking-widest uppercase font-sans">Please Wait</div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-4 w-full">
-          <div className="text-mask overflow-hidden pb-4 relative w-fit mx-auto pr-4">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 w-full overflow-hidden">
+          <div className="text-mask overflow-hidden pb-4 relative w-fit mx-auto pr-4 max-w-[calc(100vw-2rem)]">
             <h1
-              className="reveal-text stylish-font text-[5rem] md:text-[9rem] lg:text-[14rem] text-center text-zinc-300"
+              className="reveal-text stylish-font text-[3rem] sm:text-[5rem] md:text-[9rem] lg:text-[14rem] text-center text-zinc-300 leading-none"
             >
               {pageName}
             </h1>
 
             <h1
-              className="reveal-text absolute top-0 left-0 w-full stylish-font text-[5rem] md:text-[9rem] lg:text-[14rem] text-center text-zinc-900 transition-all duration-300 ease-out pr-4"
+              className="reveal-text absolute top-0 left-0 w-full stylish-font text-[3rem] sm:text-[5rem] md:text-[9rem] lg:text-[14rem] text-center text-zinc-900 transition-all duration-300 ease-out pr-4 leading-none"
               style={{
                 clipPath: `inset(0 ${100 - progress}% 0 0)`
               }}
@@ -124,12 +124,12 @@ const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, d
           </div>
         </div>
 
-        <div className="w-full p-6 md:p-10 flex flex-col gap-4">
+        <div className="w-full p-4 md:p-10 flex flex-col gap-3 overflow-hidden">
           <div className="flex justify-between items-end w-full">
             <span className="text-xs md:text-sm text-zinc-500 uppercase tracking-widest font-sans">
               {isDataLoading ? 'Loading Data' : 'Complete'}
             </span>
-            <span className="text-4xl md:text-6xl tabular-nums stylish-font text-zinc-900">
+            <span className="text-3xl md:text-6xl tabular-nums stylish-font text-zinc-900">
               {progress}%
             </span>
           </div>

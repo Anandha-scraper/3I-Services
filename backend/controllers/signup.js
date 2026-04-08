@@ -64,7 +64,7 @@ exports.register = async (req, res) => {
 
     // Notify admin (fire and forget with error logging)
     console.log('[INFO] Sending admin notification...');
-    console.log('[DEBUG] Admin email recipient:', process.env.ADMIN_EMAIL);
+    console.log('[DEBUG] Admin email recipient:', process.env.EMAIL_USER);
     console.log('[DEBUG] Calling sendEmailToAdmin with:', { requestId: newRequest.id, firstName, lastName, email, phone, city });
     
     sendEmailToAdmin({ 

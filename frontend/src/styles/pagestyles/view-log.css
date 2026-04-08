@@ -239,12 +239,45 @@
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .view-log-search {
     min-width: 100%;
   }
-  
+
   .view-log-toggles {
     justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .view-log-header h2 {
+    display: none;
+  }
+
+  .view-log-filters {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .view-log-search {
+    min-width: 100%;
+  }
+
+  .view-log-date-filters {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    align-items: center;
+    width: 100%;
+  }
+
+  .view-log-datepicker {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .view-log-toggles {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }

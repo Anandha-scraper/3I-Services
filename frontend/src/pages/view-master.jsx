@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
 import { Pagination, SearchBar, Button, ExpandColumnsButton } from '../components/Button';
 import PageLoader from '../components/loading';
+import Alert from '../components/Alert';
 import '../styles/pagestyles/view-master.css';
+import '../styles/componentstyles/Alert.css';
 
 function formatCell(value) {
   if (value == null || value === '') return '—';
@@ -12,11 +16,12 @@ function formatCell(value) {
 }
 
 export default function ViewDataPage() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [columns, setColumns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [isColumnsExpanded, setIsColumnsExpanded] = useState(false);
@@ -29,7 +34,7 @@ export default function ViewDataPage() {
   );
 
   const load = useCallback(async () => {
-    setError(null);
+    setAlert(null);
     setLoading(true);
     try {
       const res = await apiFetch('/api/excel/master?limit=1000');
@@ -40,7 +45,13 @@ export default function ViewDataPage() {
       setRows(Array.isArray(data.rows) ? data.rows : []);
       setColumns(Array.isArray(data.columns) ? data.columns : []);
     } catch (e) {
-      setError(e.message || 'Failed to load');
+      setAlert({
+        type: 'error',
+        title: 'Load Failed',
+        message: e.message || 'Failed to load master data',
+        onConfirm: () => { setAlert(null); load(); },
+        onCancel: () => setAlert(null),
+      });
       setRows([]);
       setColumns([]);
     } finally {
@@ -149,7 +160,7 @@ export default function ViewDataPage() {
     }
   };
 
-  const showTable = !loading && !error && columns.length > 0;
+  const showTable = !loading && !alert && columns.length > 0;
 
   return (
     <div className="view-master-page">
@@ -162,10 +173,14 @@ export default function ViewDataPage() {
         />
       )}
 
-      {error && (
-        <p className="view-master-error" role="alert">
-          {error}
-        </p>
+      {alert && (
+        <Alert
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+          onConfirm={alert.onConfirm}
+          onCancel={alert.onCancel}
+        />
       )}
 
       {showTable && (
@@ -192,6 +207,10 @@ export default function ViewDataPage() {
               onClick={() => setIsColumnsExpanded(!isColumnsExpanded)}
               className="view-master-expand-btn"
             />
+            <button className="page-back-btn" onClick={() => navigate(-1)}>
+              <ArrowLeft size={16} />
+              Back
+            </button>
           </div>
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingBottom: '0' }}>
             <Table

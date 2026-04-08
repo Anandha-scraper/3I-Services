@@ -12,7 +12,7 @@ async function seedAdmin() {
     const lastName = process.env.ADMIN_LASTNAME || 'User';
     const fatherName = process.env.ADMIN_FATHERNAME || 'N/A';
     const dob = process.env.ADMIN_DOB || '1990-01-01';
-    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const email = process.env.EMAIL_USER || 'admin@example.com';
     const admin_number = process.env.ADMIN_NUMBER || '';
     const countryCode = process.env.ADMIN_COUNTRY_CODE || '+91';
 

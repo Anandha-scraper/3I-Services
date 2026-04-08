@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Database, TrendingUp, FileText } from 'lucide-react';
+import { Database, TrendingUp, FileText, ArrowLeft } from 'lucide-react';
 import '../styles/pagestyles/view.css';
+import '../styles/componentstyles/Alert.css';
 
 export default function ViewPage() {
   const [activeCard, setActiveCard] = useState(null);
@@ -44,6 +45,12 @@ export default function ViewPage() {
 
   return (
     <div className="view-page">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem 0' }}>
+        <button className="page-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+          Back
+        </button>
+      </div>
       <div className="portal-cards-grid">
         {cards.map((card, index) => {
           const Icon = card.icon;
