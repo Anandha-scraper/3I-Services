@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -14,9 +15,8 @@ if (fs.existsSync(serviceAccountPath)) {
 }
 
 admin.initializeApp({ credential });
-const dbId = process.env.FIRESTORE_DB_ID;
-const db = admin.firestore();
-db.settings({ databaseId: dbId });
+const dbId = process.env.FIRESTORE_DB_ID || 'production';
+const db = getFirestore(admin.app(), dbId);
 console.log(`Firebase Connected → Firestore DB: ${dbId}`);
 const auth = admin.auth();
 module.exports = { admin, db, auth };
