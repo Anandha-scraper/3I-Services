@@ -5,5 +5,3 @@ dist
 .credentials.md
 .claude
 *.log
-# apphosting.dev.yaml
-apphosting.yaml
