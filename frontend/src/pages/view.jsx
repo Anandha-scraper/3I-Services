@@ -45,8 +45,8 @@ export default function ViewPage() {
 
   return (
     <div className="view-page">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem 0' }}>
-        <button className="page-back-btn" onClick={() => navigate(-1)}>
+      <div style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 10 }}>
+        <button className="page-back-btn" onClick={() => navigate("/home")}>
           <ArrowLeft size={16} />
           Back
         </button>

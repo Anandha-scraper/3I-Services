@@ -108,13 +108,13 @@ const PageLoader = ({ pageName = 'Loading', isDataLoading = false, onComplete, d
         <div className="flex-1 flex flex-col items-center justify-center px-4 w-full overflow-hidden">
           <div className="text-mask overflow-hidden pb-4 relative w-fit mx-auto pr-4 max-w-[calc(100vw-2rem)]">
             <h1
-              className="reveal-text stylish-font text-[3rem] sm:text-[5rem] md:text-[9rem] lg:text-[14rem] text-center text-zinc-300 leading-none"
+              className="reveal-text stylish-font text-[2rem] sm:text-[3.5rem] md:text-[6rem] lg:text-[9rem] text-center text-zinc-300 leading-none"
             >
               {pageName}
             </h1>
 
             <h1
-              className="reveal-text absolute top-0 left-0 w-full stylish-font text-[3rem] sm:text-[5rem] md:text-[9rem] lg:text-[14rem] text-center text-zinc-900 transition-all duration-300 ease-out pr-4 leading-none"
+              className="reveal-text absolute top-0 left-0 w-full stylish-font text-[2rem] sm:text-[3.5rem] md:text-[6rem] lg:text-[9rem] text-center text-zinc-900 transition-all duration-300 ease-out pr-4 leading-none"
               style={{
                 clipPath: `inset(0 ${100 - progress}% 0 0)`
               }}

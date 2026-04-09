@@ -137,10 +137,12 @@ export default function NotifyPage() {
           placeholder="Search by ledger name or date (e.g. Apr, 2026, 26)..."
           className="notify-search"
         />
-        <button className="page-back-btn" onClick={() => navigate(-1)}>
+        <div style={{ position: 'absolute', top: '2rem', right: '2rem', zIndex: 10 }}>  
+        <button className="page-back-btn" onClick={() => navigate("/home")}>
           <ArrowLeft size={16} />
           Back
         </button>
+        </div>
       </div>
 
       <div className="notify-table-section">
