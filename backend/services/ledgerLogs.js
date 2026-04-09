@@ -110,6 +110,50 @@ class LedgerLogsService {
   }
 
   /**
+   * Get logs within a date range for export
+   */
+  async exportByDateRange(opts = {}) {
+    try {
+      const now = new Date();
+      const defaultFrom = new Date(now);
+      defaultFrom.setDate(defaultFrom.getDate() - 60);
+      defaultFrom.setHours(0, 0, 0, 0);
+
+      const from = opts.dateFrom ? new Date(opts.dateFrom) : defaultFrom;
+      const to = opts.dateTo ? new Date(opts.dateTo) : new Date(now);
+      to.setHours(23, 59, 59, 999);
+
+      const fromISO = from.toISOString();
+      const toISO = to.toISOString();
+
+      const city = opts.city ? String(opts.city).trim().toLowerCase() : null;
+
+      let query = this.collection
+        .where('timestamp', '>=', fromISO)
+        .where('timestamp', '<=', toISO);
+
+      if (city) {
+        query = query.where('city', '==', city);
+      }
+
+      const snapshot = await query
+        .orderBy('timestamp', 'desc')
+        .limit(5000)
+        .get();
+
+      const logs = [];
+      snapshot.forEach((doc) => {
+        logs.push({ id: doc.id, ...doc.data() });
+      });
+
+      return logs;
+    } catch (error) {
+      console.error('Error exporting logs by date range:', error);
+      return [];
+    }
+  }
+
+  /**
    * Update log entry with date and comments
    */
   async updateLog(logId, updateData) {

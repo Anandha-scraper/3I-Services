@@ -10,6 +10,13 @@ const ledgerLogsController = require('../controllers/ledgerLogs');
 router.get('/', authenticate, ledgerLogsController.list);
 
 /**
+ * GET /api/ledger-logs/export
+ * Export logs as Excel file (date range, defaults to last 60 days)
+ * MUST be before /:ledger_id to avoid param collision
+ */
+router.get('/export', authenticate, ledgerLogsController.exportLogs);
+
+/**
  * GET /api/ledger-logs/:ledger_id
  * Get logs for a specific ledger
  */

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, X, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, X, ArrowLeft, FileDown } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { Button, SearchBar } from '../components/Button';
 import DatePicker from '../components/datepicker';
@@ -50,6 +50,12 @@ export default function ViewLogPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(20);
 
+  // Download modal state
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [dlDateFrom, setDlDateFrom] = useState('');
+  const [dlDateTo, setDlDateTo] = useState('');
+  const [downloading, setDownloading] = useState(false);
+
   const fetchLogs = async () => {
     try {
       setLoading(true);
@@ -79,6 +85,42 @@ export default function ViewLogPage() {
   useEffect(() => {
     fetchLogs();
   }, []);
+
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      const params = new URLSearchParams();
+      if (dlDateFrom) params.set('dateFrom', dlDateFrom);
+      if (dlDateTo) params.set('dateTo', dlDateTo);
+
+      const res = await apiFetch(`/api/ledger-logs/export?${params.toString()}`);
+      if (!res.ok) throw new Error('Export failed');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ledger-logs-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setShowDownloadModal(false);
+      setDlDateFrom('');
+      setDlDateTo('');
+    } catch (err) {
+      setAlert({
+        type: 'error',
+        title: 'Export Failed',
+        message: err.message || 'Could not download the Excel file',
+        onConfirm: () => setAlert(null),
+        onCancel: () => setAlert(null),
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const columns = useMemo(() => [
     {
@@ -312,28 +354,119 @@ export default function ViewLogPage() {
           )}
         </div>
         <div className="view-log-toggles">
-          <Button 
-            variant={filterType === 'all' ? 'primary' : 'outline'} 
+          <Button
+            variant={filterType === 'all' ? 'primary' : 'outline'}
             onClick={() => { setFilterType('all'); setCurrentPage(1); }}
           >
             All Updates
           </Button>
-          <Button 
-            variant={filterType === 'credit' ? 'credit' : 'outline'} 
+          <Button
+            variant={filterType === 'credit' ? 'credit' : 'outline'}
             onClick={() => { setFilterType('credit'); setCurrentPage(1); }}
             className={filterType === 'credit' ? 'active' : ''}
           >
             Credit
           </Button>
-          <Button 
-            variant={filterType === 'debit' ? 'debit' : 'outline'} 
+          <Button
+            variant={filterType === 'debit' ? 'debit' : 'outline'}
             onClick={() => { setFilterType('debit'); setCurrentPage(1); }}
             className={filterType === 'debit' ? 'active' : ''}
           >
             Debit
           </Button>
+          <button
+            type="button"
+            title="Download as Excel"
+            onClick={() => setShowDownloadModal(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 12px', borderRadius: '6px', cursor: 'pointer',
+              border: '1px solid #16a34a', background: '#f0fdf4',
+              color: '#16a34a', fontWeight: 500, fontSize: '0.8rem',
+              transition: 'all 0.2s',
+            }}
+          >
+            <FileDown size={15} />
+            Excel
+          </button>
         </div>
       </div>
+
+      {showDownloadModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(3px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowDownloadModal(false); setDlDateFrom(''); setDlDateTo(''); } }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: '12px', padding: '28px 32px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.18)', minWidth: '360px', maxWidth: '420px', width: '90%',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+              <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '8px', display: 'flex' }}>
+                <FileDown size={20} color="#16a34a" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>Export to Excel</h3>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>Select date range or leave blank for last 60 days</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 500, color: '#6b7280' }}>From Date</label>
+                <DatePicker
+                  value={dlDateFrom}
+                  onChange={(val) => { setDlDateFrom(val); if (!val) setDlDateTo(''); }}
+                  flow="currentMonth"
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 500, color: dlDateFrom ? '#6b7280' : '#d1d5db' }}>To Date</label>
+                <DatePicker
+                  value={dlDateTo}
+                  onChange={(val) => setDlDateTo(val)}
+                  disabled={!dlDateFrom}
+                  flow="currentMonth"
+                />
+              </div>
+              {!dlDateFrom && (
+                <p style={{ margin: 0, fontSize: '0.73rem', color: '#f59e0b', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '6px 10px' }}>
+                  No date selected — will download last 60 days
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <Button
+                variant="outline"
+                onClick={() => { setShowDownloadModal(false); setDlDateFrom(''); setDlDateTo(''); }}
+                disabled={downloading}
+              >
+                Cancel
+              </Button>
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 18px', borderRadius: '6px', cursor: downloading ? 'not-allowed' : 'pointer',
+                  border: 'none', background: downloading ? '#86efac' : '#16a34a',
+                  color: '#fff', fontWeight: 600, fontSize: '0.85rem',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <FileDown size={15} />
+                {downloading ? 'Downloading…' : 'Download'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="view-log-content">
         {loading ? (

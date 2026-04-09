@@ -1,4 +1,106 @@
 const ledgerLogsService = require('../services/ledgerLogs');
+const ExcelJS = require('exceljs');
+
+/**
+ * Export logs as Excel file for a given date range
+ */
+exports.exportLogs = async (req, res) => {
+  try {
+    const cityFilter = req.user.role === 'admin' ? null : (req.user.city || null);
+    const { dateFrom, dateTo } = req.query;
+
+    const logs = await ledgerLogsService.exportByDateRange({
+      dateFrom: dateFrom || null,
+      dateTo: dateTo || null,
+      city: cityFilter,
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Ledger Logs');
+
+    // Column definitions
+    sheet.columns = [
+      { header: 'Created At',     key: 'createdAt',    width: 22 },
+      { header: 'Ledger Name',    key: 'ledgerName',   width: 24 },
+      { header: 'User ID',        key: 'userId',       width: 16 },
+      { header: 'Type',           key: 'type',         width: 10 },
+      { header: 'Debit',          key: 'debit',        width: 12 },
+      { header: 'Credit',         key: 'credit',       width: 12 },
+      { header: 'Next Call Date', key: 'nextCallDate', width: 18 },
+      { header: 'Comments',       key: 'comments',     width: 40 },
+    ];
+
+    // Bold header row
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).fill = {
+      type: 'pattern', pattern: 'solid',
+      fgColor: { argb: 'FFE2E8F0' },
+    };
+
+    const isFieldUpdated = (item, fieldName) => {
+      if (!item.updatedFields) return false;
+      if (item.operation === 'insert') {
+        if (fieldName === 'ldebit') return item.ldebit > 0;
+        if (fieldName === 'lcredit') return item.lcredit > 0;
+        if (fieldName === 'nextCallDate') return !!item.nextCallDate;
+        if (fieldName === 'comments') return !!item.comments;
+        return false;
+      }
+      return Array.isArray(item.updatedFields) && item.updatedFields.includes(fieldName);
+    };
+
+    for (const item of logs) {
+      const row = sheet.addRow({
+        createdAt: item.timestamp
+          ? new Date(item.timestamp).toLocaleString('en-IN', {
+              year: 'numeric', month: 'short', day: 'numeric',
+              hour: '2-digit', minute: '2-digit',
+            })
+          : '',
+        ledgerName: item.ledger_name || '',
+        userId: item.createdByUserId || '',
+        type: item.operation === 'insert' ? 'New' : 'Update',
+        debit: item.ldebit > 0 ? item.ldebit : '',
+        credit: item.lcredit > 0 ? item.lcredit : '',
+        nextCallDate: item.nextCallDate
+          ? new Date(item.nextCallDate).toLocaleDateString('en-IN', {
+              year: 'numeric', month: 'short', day: 'numeric',
+            })
+          : '',
+        comments: item.comments || '',
+      });
+
+      // Cell highlight: debit → green
+      if (item.ldebit > 0) {
+        row.getCell('debit').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+      }
+      // Cell highlight: credit → red
+      if (item.lcredit > 0) {
+        row.getCell('credit').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+      }
+      // Cell highlight: nextCallDate → blue
+      if (isFieldUpdated(item, 'nextCallDate')) {
+        row.getCell('nextCallDate').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+      }
+      // Cell highlight: comments → amber
+      if (isFieldUpdated(item, 'comments')) {
+        row.getCell('comments').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+      }
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const filename = `ledger-logs-${today}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Error exporting logs:', error);
+    res.status(500).json({ message: 'Failed to export logs', error: error.message });
+  }
+};
 
 /**
  * Get all logs
