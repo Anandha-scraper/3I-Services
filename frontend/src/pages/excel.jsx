@@ -44,7 +44,6 @@ export default function ExcelPage() {
     if (!file || !fileType) return;
 
     const card = cards.find(c => c.id === fileType);
-    setUploading(true);
     setUploadProgress(0);
     setAlert({
       type: 'uploading',
