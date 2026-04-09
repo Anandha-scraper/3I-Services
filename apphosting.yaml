@@ -4,8 +4,9 @@ runtime: nodejs20
 # Build configuration
 build:
   commands:
-    - npm install
-    - npm run build
+    - npm install --prefix backend
+    - npm install --prefix frontend --include=dev
+    - npm run build --prefix frontend
 
 # Run configuration
 run:
