@@ -4,7 +4,10 @@ const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const passwordController = require('./controllers/password');
+const { enableFirebaseTelemetry } = require('@genkit-ai/firebase');
 dotenv.config();
+
+enableFirebaseTelemetry();
 
 // Routes
 const authRoutes = require('./routes/auth');

@@ -13,10 +13,10 @@ run:
 
 # Runtime configuration
 runConfig:
-  cpu: 1
+  cpu: 2
   memory: 512Mi
   minInstances: 0
-  maxInstances: 10
+  maxInstances: 20
   concurrency: 80
 
 # Environment variables (non-sensitive)

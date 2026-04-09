@@ -317,11 +317,11 @@ export default function UserProfilePage() {
 
               {/* Basic Info */}
               <div className="profile-fields-grid">
-                <InputField label="First Name" name="firstName" value={form.firstName} onChange={handleFormChange} placeholder="John" readOnly={!isEditing} />
-                <InputField label="Last Name" name="lastName" value={form.lastName} onChange={handleFormChange} placeholder="Doe" readOnly={!isEditing} />
+                <InputField label="First Name" name="firstName" value={form.firstName} onChange={handleFormChange} placeholder="First name" readOnly={!isEditing} />
+                <InputField label="Last Name" name="lastName" value={form.lastName} onChange={handleFormChange} placeholder="Last name" readOnly={!isEditing} />
                 <InputField label="Father Name" name="fatherName" value={form.fatherName} onChange={handleFormChange} placeholder="Father's Name" readOnly={!isEditing} />
                 <InputField label="Date of Birth" name="dob" type="date" value={form.dob} onChange={handleFormChange} readOnly={!isEditing} />
-                <InputField label="Email" name="email" type="email" value={form.email} onChange={handleFormChange} placeholder="john@example.com" readOnly={!isEditing} />
+                <InputField label="Email" name="email" type="email" value={form.email} onChange={handleFormChange} placeholder="abc@example.com" readOnly={!isEditing} />
                 <div className="profile-input-group">
                   <div>
                     <InputField label="Code" name="countryCode" value={form.countryCode} onChange={handleFormChange} placeholder="+91" readOnly={!isEditing} />
