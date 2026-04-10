@@ -48,12 +48,12 @@ env:
   # UPDATE after first deploy — your main backend URL
   - variable: CORS_ORIGIN
     availability: [RUNTIME]
-    value: "https://threeiservices-crm-dev--i-services-crm.asia-southeast1.hosted.app"
+    value: "crm.3iservices.com"
 
   #declare of database use for production or development
   - variable: FIRESTORE_DB_ID
     availability: [RUNTIME]
-    value: "development"
+    value: "production"
 
   # Environment variables (sensitive) — stored in Google Secret Manager
 
@@ -62,10 +62,10 @@ env:
 
   #used for Development
   - variable: JWT_SECRET
-    secret: projects/i-services-crm/secrets/JWT_SECRET_DEV
+    secret: projects/i-services-crm/secrets/JWT_SECRET
 
   - variable: EMAIL_USER
-    secret: projects/i-services-crm/secrets/EMAIL_USER_DEV
+    secret: projects/i-services-crm/secrets/EMAIL_USER
 
   - variable: EMAIL_PASSWORD
-    secret: projects/i-services-crm/secrets/EMAIL_PASSWORD_DEV
+    secret: projects/i-services-crm/secrets/EMAIL_PASSWORD
