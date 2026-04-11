@@ -116,157 +116,80 @@ class LedgerRemainderService {
 
   async getUpcomingRemainders(opts = {}) {
     const days = opts.days || 7;
-    // resultLimit is applied AFTER filtering, not on the Firestore query
-    const resultLimit = opts.limit != null ? parseInt(String(opts.limit), 10) : 500;
-    // Fetch more records from Firestore to ensure we find enough matches
-    const fetchLimit = 2000;
+    const resultLimit = opts.limit != null ? Math.min(parseInt(String(opts.limit), 10) || 50, 200) : 50;
     const city = opts.city ? String(opts.city).trim().toLowerCase() : null;
 
+    // YYYY-MM-DD strings sort lexicographically — Firestore can range-filter them directly.
+    // Required Firestore indexes:
+    //   - Single field: nextCallDate (ASC)
+    //   - Composite (city filter): city (ASC), nextCallDate (ASC)
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const endDate = new Date(now);
+    endDate.setDate(endDate.getDate() + days);
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    console.log('[getUpcomingRemainders] range:', todayStr, '→', endDateStr, city ? `city: ${city}` : 'all cities');
+
     try {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const endDate = new Date(today);
-      endDate.setDate(endDate.getDate() + days);
+      let query = this.collection
+        .where('nextCallDate', '>=', todayStr)
+        .where('nextCallDate', '<=', endDateStr)
+        .orderBy('nextCallDate', 'asc')
+        .limit(resultLimit);
 
-      console.log('[getUpcomingRemainders] TODAY:', today.toISOString().split('T')[0], 'END_DATE:', endDate.toISOString().split('T')[0], city ? `city: ${city}` : 'all cities');
-
-      // Get remainders - filter by city if provided
-      let query = this.collection;
       if (city) {
-        query = query.where('city', '==', city);
+        // Composite index required: (city ASC, nextCallDate ASC)
+        query = this.collection
+          .where('city', '==', city)
+          .where('nextCallDate', '>=', todayStr)
+          .where('nextCallDate', '<=', endDateStr)
+          .orderBy('nextCallDate', 'asc')
+          .limit(resultLimit);
       }
-      const snapshot = await query
-        .limit(fetchLimit)
-        .get();
 
-      console.log('[getUpcomingRemainders] Total records fetched:', snapshot.size);
+      const snapshot = await query.get();
+      console.log('[getUpcomingRemainders] Firestore returned', snapshot.size, 'docs (was 2000 before)');
 
-      const rows = [];
-      const seen = new Set();
-
-      for (const doc of snapshot.docs) {
-        const data = doc.data();
-        const nextCallDate = data.nextCallDate;
-        const ledgerId = String(data.ledger_id || '').trim();
-
-        console.log('[getUpcomingRemainders] Processing doc:', {
-          id: doc.id,
-          ledger_id: ledgerId,
-          ledger_name: data.ledger_name,
-          hasDate: !!nextCallDate,
-          dateValue: nextCallDate,
-        });
-
-        // Avoid duplicates
-        if (seen.has(ledgerId)) {
-          console.log('[getUpcomingRemainders] Skipping duplicate:', ledgerId);
-          continue;
+      // Batch user lookups — collect unique updatedByUserId refs, fetch in one shot
+      const docs = snapshot.docs;
+      const userIds = [...new Set(docs.map(d => d.data().updatedByUserId).filter(Boolean))];
+      const userMap = {};
+      if (userIds.length > 0) {
+        const userRefs = userIds.map(uid => db.collection('users').doc(uid));
+        const userDocs = await db.getAll(...userRefs);
+        for (const ud of userDocs) {
+          if (ud.exists) userMap[ud.id] = ud.data().firstName || '-';
         }
+      }
+
+      const seen = new Set();
+      const rows = [];
+      for (const doc of docs) {
+        const data = doc.data();
+        const ledgerId = String(data.ledger_id || '').trim();
+        if (seen.has(ledgerId)) continue;
         seen.add(ledgerId);
 
-        try {
-          let transactionDate;
-
-          // Skip records without nextCallDate - don't show them at all
-          if (!nextCallDate) {
-            console.log('[getUpcomingRemainders] Skipping record without date:', ledgerId);
-            continue;
-          }
-
-          const dateStr = String(nextCallDate).trim();
-          // Handle various date formats (YYYY-MM-DD, ISO string, etc.)
-          let parsedDate;
-          
-          // Try parsing as ISO string first
-          if (dateStr.includes('T')) {
-            parsedDate = new Date(dateStr);
-          } else if (dateStr.includes('-')) {
-            // Parse YYYY-MM-DD format
-            const [year, month, day] = dateStr.split('-').map(Number);
-            parsedDate = new Date(year, month - 1, day);
-          } else {
-            // Try native Date parsing as fallback
-            parsedDate = new Date(dateStr);
-          }
-          
-          // Validate the parsed date
-          if (isNaN(parsedDate.getTime())) {
-            console.log('[getUpcomingRemainders] Invalid date format, skipping:', ledgerId, '-> raw:', dateStr);
-            continue;
-          }
-          
-          transactionDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
-          console.log('[getUpcomingRemainders] Record with date:', ledgerId, '-> raw:', dateStr, '-> parsed:', transactionDate.toISOString().split('T')[0]);
-
-          // Check if date is within next 7 days
-          if (transactionDate >= today && transactionDate <= endDate) {
-            const row = {
-              id: doc.id,
-              ...data,
-              // Keep the nextCallDate as is (it has a value)
-              nextCallDate: nextCallDate,
-              firstName: '-',
-              debit: data.debit !== undefined && data.debit !== null ? parseFloat(data.debit) : 0,
-              credit: data.credit !== undefined && data.credit !== null ? parseFloat(data.credit) : 0,
-              group: data.group || '-',
-            };
-
-            // Fetch user information if updatedByUserId exists
-            if (data.updatedByUserId) {
-              try {
-                const userDoc = await db.collection('users').doc(data.updatedByUserId).get();
-                if (userDoc.exists) {
-                  row.firstName = userDoc.data().firstName || '-';
-                }
-              } catch (error) {
-                console.error('Error fetching user info:', error.message);
-              }
-            }
-
-            // Fetch latest comment from Ledger_logs if missing
-            if (!row.lastComments) {
-              try {
-                const logSnap = await db.collection('Ledger_logs')
-                  .where('ledger_id', '==', ledgerId)
-                  .orderBy('timestamp', 'desc')
-                  .limit(1)
-                  .get();
-                  
-                if (!logSnap.empty) {
-                  const logData = logSnap.docs[0].data();
-                  row.lastComments = logData.lastComments || logData.comments || '';
-                  console.log(`[getUpcomingRemainders] Fetched lastComments from Ledger_logs for ${ledgerId}`);
-                }
-              } catch (error) {
-                // If index is missing or anything else fails, we just silently ignore to not break the feed
-                console.error(`[getUpcomingRemainders] Error fetching comment for ${ledgerId}:`, error.message);
-              }
-            }
-
-            console.log('[getUpcomingRemainders] ✓ Adding row:', { ledger_name: row.ledger_name, date: row.nextCallDate });
-            rows.push(row);
-          } else {
-            console.log('[getUpcomingRemainders] ✗ Date out of range:', ledgerId, '-> date:', transactionDate.toISOString().split('T')[0]);
-          }
-        } catch (error) {
-          console.error('Error parsing date:', nextCallDate, error.message);
-        }
+        rows.push({
+          id: doc.id,
+          ...data,
+          firstName: userMap[data.updatedByUserId] || '-',
+          debit: data.debit != null ? parseFloat(data.debit) : 0,
+          credit: data.credit != null ? parseFloat(data.credit) : 0,
+          group: data.group || '-',
+          // lastComments is already stored on the record — no cross-collection fetch needed
+        });
       }
 
-      // Sort by date
-      rows.sort((a, b) => {
-        const dateA = new Date(a.nextCallDate);
-        const dateB = new Date(b.nextCallDate);
-        return dateA - dateB;
-      });
-
-      // Apply result limit AFTER filtering
-      const limitedRows = rows.slice(0, resultLimit);
-      
-      console.log('[getUpcomingRemainders] ✓ FINAL - found', rows.length, 'items in next', days, 'days, returning', limitedRows.length);
-      return limitedRows;
+      console.log('[getUpcomingRemainders] ✓ returning', rows.length, 'rows');
+      return rows;
     } catch (error) {
-      console.error('Error fetching upcoming remainders:', error);
+      console.error('[getUpcomingRemainders] Error:', error.message);
+      // If the Firestore index is missing the query will throw — fall back to the safe list
+      if (error.message && error.message.includes('index')) {
+        console.warn('[getUpcomingRemainders] Missing Firestore index — create composite index (city ASC, nextCallDate ASC) and single-field index (nextCallDate ASC) in Firebase Console');
+      }
       return [];
     }
   }
@@ -306,6 +229,31 @@ class LedgerRemainderService {
       console.log('Sample row:', rows[0]);
     }
     return rows;
+  }
+
+  async getByLedgerId(ledger_id) {
+    const snapshot = await this.collection
+      .where('ledger_id', '==', String(ledger_id).trim())
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+    const row = {
+      id: doc.id,
+      ...data,
+      firstName: '-',
+      debit: data.debit !== undefined && data.debit !== null ? parseFloat(data.debit) : 0,
+      credit: data.credit !== undefined && data.credit !== null ? parseFloat(data.credit) : 0,
+      group: data.group || '-',
+    };
+    if (data.updatedByUserId) {
+      try {
+        const userDoc = await db.collection('users').doc(data.updatedByUserId).get();
+        if (userDoc.exists) row.firstName = userDoc.data().firstName || '-';
+      } catch (_) { /* non-critical */ }
+    }
+    return row;
   }
 
   async delete(id) {

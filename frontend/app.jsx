@@ -1,17 +1,19 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import LoginPage from './src/pages/login';
-import HomePage from './src/pages/home';
-import ExcelPage from './src/pages/excel';
-import ExcelMasterPage from './src/pages/excel-master';
-import ViewPage from './src/pages/view';
-import ViewDataPage from './src/pages/view-master';
-import NotifyPage from './src/pages/view-notify';
-import NotifyDetailPage from './src/pages/view-notify-detail';
-import ViewLogPage from './src/pages/view-log';
-import ViewOutstandingsPage from './src/pages/view-outstandings';
-import UserProfilePage from './src/components/userprofile';
 import Dashboard from './src/components/Dashboard';
+
+const LoginPage = lazy(() => import('./src/pages/login'));
+const HomePage = lazy(() => import('./src/pages/home'));
+const ExcelPage = lazy(() => import('./src/pages/excel'));
+const ExcelMasterPage = lazy(() => import('./src/pages/excel-master'));
+const ViewPage = lazy(() => import('./src/pages/view'));
+const ViewDataPage = lazy(() => import('./src/pages/view-master'));
+const NotifyPage = lazy(() => import('./src/pages/view-notify'));
+const NotifyDetailPage = lazy(() => import('./src/pages/view-notify-detail'));
+const ViewLogPage = lazy(() => import('./src/pages/view-log'));
+const ViewOutstandingsPage = lazy(() => import('./src/pages/view-outstandings'));
+const UserProfilePage = lazy(() => import('./src/components/userprofile'));
 
 function ProtectedRoute({ children, activeTab }) {
   const { isLoggedIn } = useAuth();
@@ -40,6 +42,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" /></div>}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           
@@ -136,6 +139,7 @@ function App() {
           <Route path="/dashboard" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

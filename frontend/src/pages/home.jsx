@@ -136,10 +136,14 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
     }
   }, [setAdminData]);
 
+  // HomePage is the sole owner of the fetch lifecycle.
+  // AdminDashboard renders from the prop; load() is only used for post-mutation refresh.
   useEffect(() => {
-    if (!adminData) { load(); }
-    else { setData(adminData); setLoading(false); }
-  }, [adminData, load]);
+    if (adminData) {
+      setData(adminData);
+      setLoading(false);
+    }
+  }, [adminData]);
 
   const copyToClipboard = (text, label) => {
     navigator.clipboard.writeText(text).then(() => {

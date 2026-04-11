@@ -59,6 +59,19 @@ exports.upcoming = async (req, res) => {
   }
 };
 
+exports.getById = async (req, res) => {
+  try {
+    const { ledger_id } = req.params;
+    if (!ledger_id) return res.status(400).json({ error: 'Ledger ID is required' });
+    const row = await ledgerRemainderService.getByLedgerId(ledger_id);
+    if (!row) return res.status(404).json({ error: 'Ledger not found' });
+    res.json({ row });
+  } catch (error) {
+    console.error('Error fetching ledger remainder by id:', error);
+    res.status(500).json({ message: 'Failed to fetch ledger remainder', error: error.message });
+  }
+};
+
 exports.update = async (req, res) => {
   try {
     const { ledger_id } = req.params;
@@ -88,8 +101,7 @@ exports.update = async (req, res) => {
 
     // Role enforcement: non-admins cannot modify already-occupied customer slots
     if (req.user.role !== 'admin') {
-      const existingRows = await ledgerRemainderService.list({ limit: 2000 });
-      const existing = existingRows.find(r => r.ledger_id === String(ledger_id).trim()) || {};
+      const existing = (await ledgerRemainderService.getByLedgerId(ledger_id)) || {};
 
       for (let i = 1; i <= 3; i++) {
         const incomingName  = req.body[`cname${i}`]  ? String(req.body[`cname${i}`]).trim()  : null;
@@ -153,8 +165,7 @@ exports.update = async (req, res) => {
     }
 
     // Fetch previous data BEFORE update for comparison
-    const previousRows = await ledgerRemainderService.list({ limit: 2000 });
-    const previousData = previousRows.find(r => r.ledger_id === String(ledger_id).trim()) || {};
+    const previousData = (await ledgerRemainderService.getByLedgerId(ledger_id)) || {};
 
     const result = await ledgerRemainderService.updateByLedgerId(ledger_id, updateData);
 

@@ -7,20 +7,20 @@ import { AnimatedButton, Dropdown, cityOptions, COUNTRY_OPTIONS } from '../compo
 import DatePicker from '../components/datepicker';
 import Loader from '../components/loader';
 import { Scale, FileText, Network, Smartphone, Code, Settings,  CheckCircle2, ChevronRight, Zap, Briefcase, Globe, Cpu, Palette, Lock, Bell, Users, FileSpreadsheet, Mail } from 'lucide-react';
-import card1 from '../images/cards/card1.jpg';
-import card2 from '../images/cards/card2.jpg';
-import card3 from '../images/cards/card3.png';
-import card4 from '../images/cards/card4.png';
-import card5 from '../images/cards/card5.png';
-import card6 from '../images/cards/card6.png';
-import card7 from '../images/cards/card7.jpg';
-import card8 from '../images/cards/card8.jpg';
-import card9 from '../images/cards/card9.jpg';
-import card10 from '../images/cards/card10.jpg';
-import card11 from '../images/cards/card11.jpg';
-import card12 from '../images/cards/card12.jpg';
-import card13 from '../images/cards/card13.jpg';
-import card14 from '../images/cards/card14.jpg';
+const card1 = '/cards/card1.webp';
+const card2 = '/cards/card2.webp';
+const card3 = '/cards/card3.webp';
+const card4 = '/cards/card4.webp';
+const card5 = '/cards/card5.webp';
+const card6 = '/cards/card6.webp';
+const card7 = '/cards/card7.webp';
+const card8 = '/cards/card8.webp';
+const card9 = '/cards/card9.webp';
+const card10 = '/cards/card10.webp';
+const card11 = '/cards/card11.webp';
+const card12 = '/cards/card12.webp';
+const card13 = '/cards/card13.webp';
+const card14 = '/cards/card14.webp';
 
 const CONFIG = {
   carousel: {
@@ -850,15 +850,17 @@ export default function LoginPage() {
                       height: cardSize === 'sm' ? '148px' : cardSize === 'md' ? '200px' : '320px'
                     }}
                   >
-                    <img 
-                      src={card.image} 
+                    <img
+                      src={card.image}
                       alt={card.title}
                       width={600}
                       height={384}
+                      loading="lazy"
+                      decoding="async"
                       onLoad={() => handleImageLoad(card.id)}
                       className={`w-full h-full object-cover transition-all duration-700 ${
-                        loadedImages[card.id] 
-                          ? 'opacity-100 scale-100' 
+                        loadedImages[card.id]
+                          ? 'opacity-100 scale-100'
                           : 'opacity-0 scale-95'
                       }`}
                     />

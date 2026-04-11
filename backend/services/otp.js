@@ -67,7 +67,12 @@ class OtpService {
   }
 
   async cleanupExpired() {
-    const snapshot = await this.collection.where('expiresAt', '<=', new Date()).get();
+    // Batch-delete at most 100 expired OTPs per interval to avoid unbounded scans
+    const snapshot = await this.collection
+      .where('expiresAt', '<=', new Date())
+      .limit(100)
+      .get();
+    if (snapshot.empty) return 0;
     const batch = db.batch();
     snapshot.forEach(doc => { batch.delete(doc.ref); });
     await batch.commit();

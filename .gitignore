@@ -5,3 +5,4 @@ dist
 .credentials.md
 .claude
 *.log
+package-lock.json

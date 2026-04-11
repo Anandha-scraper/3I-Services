@@ -17,7 +17,6 @@ export default function NotifyDetailPage() {
   const { row } = location.state || {};
   const [ledgerData, setLedgerData] = useState(row || null);
   const [bankData, setBankData] = useState(null);
-  const [customerData, setCustomerData] = useState(null);
   const [additionalCustomers, setAdditionalCustomers] = useState([]);
   const [editableDate, setEditableDate] = useState('');
   const [editableComments, setEditableComments] = useState('');
@@ -25,11 +24,7 @@ export default function NotifyDetailPage() {
   const [isEditingComment, setIsEditingComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ledgerDataLoading, setLedgerDataLoading] = useState(true);
-  const [customerDataLoading, setCustomerDataLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
-  
-  // Combined loading state - loader shows while any data is loading
-  const isDataLoading = ledgerDataLoading || customerDataLoading;
   const [alert, setAlert] = useState(null);
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', mobile: '', email: '' });
@@ -37,68 +32,41 @@ export default function NotifyDetailPage() {
   const [editingCustomerIndex, setEditingCustomerIndex] = useState(null);
   const [editingCustomerData, setEditingCustomerData] = useState({ name: '', mobile: '', email: '' });
 
-  // Fetch ledger remainder data from database
+  // Fetch ledger remainder data — single-record lookup via getById (1 Firestore read)
   useEffect(() => {
     const fetchLedgerData = async () => {
       if (!row?.ledger_id) {
         setLedgerDataLoading(false);
         return;
       }
-
       try {
-        const response = await apiFetch(`/api/ledger-remainder?limit=500`);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
-        }
-
-        const responseText = await response.text();
-        if (!responseText) {
-          throw new Error('Empty response from server');
-        }
-
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          throw new Error('Invalid response format from server');
-        }
-
-        // Find the matching ledger by ledger_id
-        const matchedLedger = data.rows?.find(r => r.ledger_id === row.ledger_id);
-
-        if (matchedLedger) {
-          setLedgerData(matchedLedger);
-          setEditableDate(matchedLedger.nextCallDate || '');
-          setEditableComments(matchedLedger.lastComments || '');
-
-          // Load additional customers (up to 3)
+        const response = await apiFetch(`/api/ledger-remainder/${encodeURIComponent(row.ledger_id)}`);
+        if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+        const data = await response.json();
+        const record = data.row;
+        if (record) {
+          setLedgerData(record);
+          setEditableDate(record.nextCallDate || '');
+          setEditableComments(record.lastComments || '');
           const additionals = [];
           for (let i = 1; i <= 3; i++) {
-            const cname = matchedLedger[`cname${i}`];
-            const mob = matchedLedger[`cmob${i}`];
-            const cemail = matchedLedger[`cemail${i}`];
+            const cname = record[`cname${i}`];
+            const mob = record[`cmob${i}`];
+            const cemail = record[`cemail${i}`];
             if (cname || mob || cemail) {
               additionals.push({ name: cname || '', mobile: mob || '', email: cemail || '' });
-              console.log(`Loaded customer ${i}:`, { name: cname, mobile: mob, email: cemail });
             }
           }
-          console.log('Total loaded additional customers:', additionals.length);
           setAdditionalCustomers(additionals);
-          console.log('Fetched ledger data from database:', matchedLedger);
         }
       } catch (error) {
         console.error('Error fetching ledger data:', error);
-        // Fallback to row data if fetch fails
         setEditableDate(row?.date || '');
         setEditableComments(row?.lastComments || row?.comments || '');
       } finally {
-        // Ledger data loading complete
         setLedgerDataLoading(false);
       }
     };
-
     fetchLedgerData();
   }, [row?.ledger_id]);
 
@@ -122,54 +90,6 @@ export default function NotifyDetailPage() {
     fetchBankData();
   }, [ledgerData?.ledger_id]);
 
-  // Fetch customer data from Ledger_Remainder based on ledger_id
-  useEffect(() => {
-    const fetchCustomerData = async () => {
-      if (!ledgerData?.ledger_id) {
-        setCustomerDataLoading(false);
-        return;
-      }
-      
-      setCustomerDataLoading(true);
-      
-      try {
-        const response = await apiFetch(`/api/ledger-remainder?limit=500`);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch customer data: ${response.status}`);
-        }
-
-        const responseText = await response.text();
-        if (!responseText) {
-          throw new Error('Empty response from server');
-        }
-
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          throw new Error('Invalid response format from server');
-        }
-        
-        // Find the matching customer from ledger remainder (it already has the data)
-        const matchedCustomer = data.rows?.find(r => r.ledger_id === ledgerData.ledger_id);
-        
-        if (matchedCustomer) {
-          setCustomerData(matchedCustomer);
-          console.log('Fetched customer data from Ledger_Remainder:', matchedCustomer);
-        }
-      } catch (error) {
-        console.error('Error fetching customer data:', error);
-        // Silently fail if customer data is not found
-      } finally {
-        // Customer data loading complete
-        setCustomerDataLoading(false);
-      }
-    };
-
-    fetchCustomerData();
-  }, [ledgerData?.ledger_id]);
 
   const formatCurrency = (value) => {
     if (value == null || value === 0 || value === '0') return '—';
@@ -459,7 +379,7 @@ export default function NotifyDetailPage() {
       {showLoader && (
         <PageLoader
           pageName="Notification Detail"
-          isDataLoading={isDataLoading}
+          isDataLoading={ledgerDataLoading}
           duration={500}
           onComplete={() => setShowLoader(false)}
         />
@@ -658,7 +578,7 @@ export default function NotifyDetailPage() {
                 )}
               </div>
 
-              {customerData && (
+              {ledgerData && (
                 <>
                   <h4 className="customer-details-heading">Customer Details :</h4>
                   <div className="customer-details-row">
@@ -668,7 +588,7 @@ export default function NotifyDetailPage() {
                         <User className="detail-icon" size={20} />
                       </div>
                       <div className="detail-value">
-                        {customerData.contact || '—'}
+                        {ledgerData.contact || '—'}
                       </div>
                     </div>
 
@@ -678,7 +598,7 @@ export default function NotifyDetailPage() {
                         <Phone className="detail-icon" size={20} />
                       </div>
                       <div className="detail-value">
-                        {customerData.mobile || '—'}
+                        {ledgerData.mobile || '—'}
                       </div>
                     </div>
 
@@ -688,7 +608,7 @@ export default function NotifyDetailPage() {
                         <Mail className="detail-icon" size={20} />
                       </div>
                       <div className="detail-value">
-                        {customerData.email || '—'}
+                        {ledgerData.email || '—'}
                       </div>
                     </div>
                   </div>

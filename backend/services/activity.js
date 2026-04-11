@@ -30,13 +30,14 @@ class ActivityService {
   }
 
   async getLastLogin(userId) {
-    const snapshot = await this.collection.where('userId', '==', userId).get();
+    // Requires Firestore index: (userId ASC, timestamp DESC) on loginActivities
+    const snapshot = await this.collection
+      .where('userId', '==', userId)
+      .orderBy('timestamp', 'desc')
+      .limit(1)
+      .get();
     if (snapshot.empty) return null;
-
-    const activities = [];
-    snapshot.forEach(doc => { activities.push({ id: doc.id, ...doc.data() }); });
-    activities.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-    return activities[0] || null;
+    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
   }
 }
 
