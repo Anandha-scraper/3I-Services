@@ -38,7 +38,7 @@
 .alert-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -688,5 +688,50 @@
 @media (max-width: 767px) {
   .page-back-btn {
     display: none;
+  }
+}
+
+/* ========== MOBILE RESPONSIVE (≤ 480px) ========== */
+@media (max-width: 480px) {
+  .alert-overlay {
+    padding: 1.25rem 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .alert-card {
+    max-width: 100%;
+    border-radius: 1.25rem;
+  }
+
+  .alert-card--uploading {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+
+  .alert-card--warning-large {
+    max-width: 100%;
+    max-height: 90vh;
+  }
+
+  .alert-content {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .alert-content--warning-large {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .alert-title {
+    font-size: 1.25rem;
+  }
+
+  .alert-warning-stats {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .alert-stat-value {
+    font-size: 1.4rem;
   }
 }
