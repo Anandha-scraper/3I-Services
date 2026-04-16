@@ -8,3 +8,6 @@ dist
 package-lock.json
 frontend/public/cards/
 firestore.indexes.json
+# Dev-only tools (not for repo)
+backend/package.json
+frontend/src/dev/FirebaseMonitor.jsx
