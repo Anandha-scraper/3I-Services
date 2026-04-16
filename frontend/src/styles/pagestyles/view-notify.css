@@ -169,11 +169,11 @@
 }
 
 .notify-table tbody tr:hover {
-  background-color: rgba(109, 158, 81, 0.04);
+  background-color: rgba(109, 158, 81, 0.12) !important;
 }
 
 .notify-table tbody tr:nth-child(odd) {
-  background-color: rgba(109, 158, 81, 0.02);
+  background-color: rgba(109, 158, 81, 0.03);
 }
 
 .notify-table tbody tr:nth-child(even) {

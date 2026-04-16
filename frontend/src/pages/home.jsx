@@ -11,12 +11,12 @@ import '../styles/pagestyles/home.css';
 function formatStatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
   const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  return isToday
-    ? `Today, ${time}`
-    : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + time;
+  const day = String(d.getDate()).padStart(2, '0');
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = monthNames[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}, ${time}`;
 }
 
 function formatRequestDate(iso) {
@@ -678,8 +678,9 @@ function UserGreetingBanner({ user, stats, onEmployeeCardClick, isEmployeeCardEx
             <div className="ub__card-icon"><FileCheck size={28} /></div>
             <div className="ub__card-body">
               <div className="ub__card-label">Last Master Uploaded</div>
-              <div className="ub__card-value-small">{stats?.src_master ?? 'Not uploaded'}</div>
-              <div className="ub__card-timestamp">{formatStatDate(stats?.src_master_date)}</div>
+              <div className="ub__card-value">
+                {stats?.src_master_date ? formatStatDate(stats.src_master_date) : 'Not uploaded'}
+              </div>
             </div>
           </div>
 
@@ -687,8 +688,9 @@ function UserGreetingBanner({ user, stats, onEmployeeCardClick, isEmployeeCardEx
             <div className="ub__card-icon"><BookMarked size={28} /></div>
             <div className="ub__card-body">
               <div className="ub__card-label">Last Outstanding Uploaded</div>
-              <div className="ub__card-value-small">{stats?.src_outstanding ?? 'Not uploaded'}</div>
-              <div className="ub__card-timestamp">{formatStatDate(stats?.src_outstanding_date)}</div>
+              <div className="ub__card-value">
+                {stats?.src_outstanding_date ? formatStatDate(stats.src_outstanding_date) : 'Not uploaded'}
+              </div>
             </div>
           </div>
         </div>

@@ -602,11 +602,13 @@ export default function NotifyDetailPage() {
                               <Phone className="detail-icon" size={20} />
                             </div>
                             <input
-                              type="text"
+                              type="tel"
                               value={editingCustomerData.mobile}
-                              onChange={(e) => setEditingCustomerData({ ...editingCustomerData, mobile: e.target.value })}
+                              onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); setEditingCustomerData({ ...editingCustomerData, mobile: digits }); }}
                               placeholder="Enter mobile"
                               className="customer-input"
+                              maxLength={10}
+                              inputMode="numeric"
                             />
                           </div>
                           <div className="detail-card customer-detail-email-card">
@@ -694,11 +696,13 @@ export default function NotifyDetailPage() {
                     <Phone className="detail-icon" size={20} />
                   </div>
                   <input
-                    type="text"
+                    type="tel"
                     value={newCustomer.mobile}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, mobile: e.target.value })}
+                    onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); setNewCustomer({ ...newCustomer, mobile: digits }); }}
                     placeholder="Enter mobile"
                     className="customer-input"
+                    maxLength={10}
+                    inputMode="numeric"
                   />
                 </div>
                 <div className="detail-card customer-detail-email-card">

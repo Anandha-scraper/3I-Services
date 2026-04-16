@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useOutstandingsData } from '../hooks/useOutstandingsData';
 import Table from '../components/Table';
 import { Pagination } from '../components/Button';
@@ -31,9 +31,7 @@ export default function ViewOutstandingsPage() {
   const [pageIndex, setPageIndex] = useState(1);
   const [showLoader, setShowLoader] = useState(true);
 
-  // Sort state
-  const [sortField, setSortField] = useState('nextCallDate');
-  const [sortDir, setSortDir] = useState('asc');
+
 
   const currentCursor = cursorStack[cursorStack.length - 1];
 
@@ -55,65 +53,12 @@ export default function ViewOutstandingsPage() {
     setPageIndex(p => p - 1);
   };
 
-  function handleSort(field) {
-    if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDir('asc');
-    }
-  }
 
-  // Sort applied client-side on the 15 loaded rows
-  const displayRows = useMemo(() => {
-    let result = [...rows];
-
-    result.sort((a, b) => {
-      if (sortField === 'nextCallDate') {
-        const aHas = !!a.nextCallDate;
-        const bHas = !!b.nextCallDate;
-        if (!aHas && !bHas) return String(a.ledger_name ?? '').localeCompare(String(b.ledger_name ?? ''));
-        if (!aHas) return 1;
-        if (!bHas) return -1;
-        const diff = a.nextCallDate.localeCompare(b.nextCallDate);
-        return sortDir === 'asc' ? diff : -diff;
-      }
-      if (sortField === 'debit' || sortField === 'credit') {
-        const diff = (parseFloat(a[sortField]) || 0) - (parseFloat(b[sortField]) || 0);
-        return sortDir === 'asc' ? diff : -diff;
-      }
-      // ledger_name
-      const diff = String(a.ledger_name ?? '').localeCompare(String(b.ledger_name ?? ''));
-      return sortDir === 'asc' ? diff : -diff;
-    });
-
-    return result;
-  }, [rows, sortField, sortDir]);
-
-  function SortIcon({ field }) {
-    if (sortField !== field) return null;
-    return sortDir === 'asc'
-      ? <ArrowUpNarrowWide size={13} style={{ marginLeft: 4, verticalAlign: 'middle' }} />
-      : <ArrowDownNarrowWide size={13} style={{ marginLeft: 4, verticalAlign: 'middle' }} />;
-  }
-
-  function SortableLabel({ field, children }) {
-    return (
-      <button
-        className="outstandings-sort-btn"
-        onClick={() => handleSort(field)}
-        title={`Sort by ${children}`}
-      >
-        {children}
-        <SortIcon field={field} />
-      </button>
-    );
-  }
 
   const columns = useMemo(() => [
     {
       key: 'ledger_name',
-      label: <SortableLabel field="ledger_name">Ledger Name</SortableLabel>,
+      label: 'Ledger Name',
       width: '280px',
       align: 'center',
     },
@@ -125,27 +70,26 @@ export default function ViewOutstandingsPage() {
     },
     {
       key: 'debit',
-      label: <SortableLabel field="debit">Debit</SortableLabel>,
+      label: 'Debit',
       width: '150px',
       align: 'center',
       render: (item) => formatCurrency(item.debit),
     },
     {
       key: 'credit',
-      label: <SortableLabel field="credit">Credit</SortableLabel>,
+      label: 'Credit',
       width: '150px',
       align: 'center',
       render: (item) => formatCurrency(item.credit),
     },
     {
       key: 'nextCallDate',
-      label: <SortableLabel field="nextCallDate">Next Call Date</SortableLabel>,
+      label: 'Next Call Date',
       width: '160px',
       align: 'center',
       render: (item) => formatDate(item.nextCallDate),
     },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [sortField, sortDir]);
+  ], []);
 
   return (
     <div className="outstandings-page">
@@ -183,7 +127,7 @@ export default function ViewOutstandingsPage() {
           <div className="outstandings-table-container">
             <Table
               columns={columns}
-              data={displayRows}
+              data={rows}
               noDataMessage="No ledger remainders found"
               striped={true}
               headerGradient={true}
