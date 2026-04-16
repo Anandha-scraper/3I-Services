@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Users, UserPlus, Clock, Mail, Check, X, Trash2, IdCard, Shield, User as UserIcon, Bell, MapPin, BookMarked, IndianRupee, Database, FileCheck } from 'lucide-react';
+import { Users, UserPlus, Clock, Mail, Check, X, Trash2, IdCard, Shield, User as UserIcon, Bell, MapPin, BookMarked, IndianRupee, Database, FileCheck, Pencil } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import Alert from '../components/Alert';
 import PageLoader from '../components/loading';
 import { RemainderCard } from './Remainder';
+import { cityOptions, COUNTRY_OPTIONS } from '../components/Button';
 import '../styles/pagestyles/home.css';
 
 function formatStatDate(iso) {
@@ -41,6 +42,9 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
   const [loading, setLoading] = useState(!adminData);
   const [error, setError] = useState(null);
   const [alertState, setAlertState] = useState(null);
+  const [editingRow, setEditingRow] = useState(null);
+  const [editValues, setEditValues] = useState({ city: '', phone: '', countryCode: '+91' });
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     if (activeAdminList === 'requests') {
@@ -156,6 +160,61 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
     }
   }, [adminData]);
 
+  const validatePhone = (phone) => {
+    if (phone === '') return '';
+    if (!/^\d+$/.test(phone)) return 'Only digits are allowed.';
+    if (phone.length < 7) return 'Phone must be at least 7 digits.';
+    if (phone.length > 10) return 'Phone must be at most 10 digits.';
+    return '';
+  };
+
+  const startEdit = (row) => {
+    setEditingRow(row.empId);
+    setEditValues({ city: row.city || '', phone: row.phone || '', countryCode: row.countryCode || '+91' });
+    setPhoneError('');
+  };
+
+  const cancelEdit = () => {
+    setEditingRow(null);
+    setEditValues({ city: '', phone: '', countryCode: '+91' });
+    setPhoneError('');
+  };
+
+  const handleUpdateUser = async (empId) => {
+    const err = validatePhone(editValues.phone);
+    if (err) { setPhoneError(err); return; }
+    setAlertState({ type: 'loading', title: 'Saving changes…' });
+    const startTime = Date.now();
+    try {
+      const res = await apiFetch(`/api/admin/users/${empId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editValues),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Update failed');
+      }
+      const remaining = 1500 - (Date.now() - startTime);
+      setTimeout(() => {
+        setAlertState({ type: 'success', title: 'Saved', message: 'Employee details updated.' });
+        setData((prev) => ({
+          ...prev,
+          employees: prev.employees.map((e) =>
+            e.empId === empId ? { ...e, ...editValues } : e
+          ),
+        }));
+        cancelEdit();
+        setTimeout(() => setAlertState(null), 1800);
+      }, Math.max(0, remaining));
+    } catch (e) {
+      const remaining = 1500 - (Date.now() - startTime);
+      setTimeout(() => {
+        setAlertState({ type: 'error', title: 'Update Failed', message: e.message });
+      }, Math.max(0, remaining));
+    }
+  };
+
   const copyToClipboard = (text, label) => {
     navigator.clipboard.writeText(text).then(() => {
       setAlertState({ type: 'success', title: 'Copied!', message: `${label} copied to clipboard` });
@@ -228,52 +287,135 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
                     {(data.employees || []).length === 0 ? (
                       <tr><td colSpan={7} className="ad__table-empty">No employees yet.</td></tr>
                     ) : (
-                      (data.employees || []).map((row) => (
-                        <tr key={row.empId}>
-                          <td>
-                            <div className="ad__person">
-                              <span className="ad__person-name">
-                                {[row.firstName, row.lastName].filter(Boolean).join(' ') || '—'}
+                      (data.employees || []).map((row) => {
+                        const isEditing = editingRow === row.empId;
+                        return (
+                          <tr key={row.empId}>
+                            <td>
+                              <div className="ad__person">
+                                <span className="ad__person-name">
+                                  {[row.firstName, row.lastName].filter(Boolean).join(' ') || '—'}
+                                </span>
+                              </div>
+                            </td>
+                            <td><code className="ad__code">{row.empId || '—'}</code></td>
+                            <td>
+                              {isEditing ? (
+                                <select
+                                  className="ad__inline-select"
+                                  value={editValues.city}
+                                  onChange={(e) => setEditValues((v) => ({ ...v, city: e.target.value }))}
+                                >
+                                  <option value="">— Select City —</option>
+                                  {cityOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                row.city || '—'
+                              )}
+                            </td>
+                            <td>
+                              {isEditing ? (
+                                <>
+                                  <div className="ad__inline-phone">
+                                    <select
+                                      className="ad__inline-select ad__inline-select--cc"
+                                      value={editValues.countryCode}
+                                      onChange={(e) => setEditValues((v) => ({ ...v, countryCode: e.target.value }))}
+                                    >
+                                      {COUNTRY_OPTIONS.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>{opt.shortLabel}</option>
+                                      ))}
+                                    </select>
+                                    <input
+                                      className={`ad__inline-input${phoneError ? ' ad__inline-input--error' : ''}`}
+                                      type="tel"
+                                      value={editValues.phone}
+                                      onChange={(e) => {
+                                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        setEditValues((v) => ({ ...v, phone: digits }));
+                                        setPhoneError(validatePhone(digits));
+                                      }}
+                                      placeholder="Phone number"
+                                      maxLength={10}
+                                    />
+                                  </div>
+                                  {phoneError && (
+                                    <span className="ad__inline-error">{phoneError}</span>
+                                  )}
+                                </>
+                              ) : (
+                                row.phone ? (
+                                  <code
+                                    className="ad__code ad__code--click"
+                                    onClick={() => copyToClipboard(`${row.countryCode}${row.phone}`, 'Phone Number')}
+                                    title="Click to copy"
+                                  >
+                                    {row.countryCode}{row.phone}
+                                  </code>
+                                ) : '—'
+                              )}
+                            </td>
+                            <td>
+                              <span className={row.role === 'admin' ? 'ad__badge ad__badge--admin' : 'ad__badge ad__badge--emp'}>
+                                {row.role || 'employee'}
                               </span>
-                            </div>
-                          </td>
-                          <td><code className="ad__code">{row.empId || '—'}</code></td>
-                          <td>{row.city || '—'}</td>
-                          <td>
-                            {row.phone ? (
-                              <code
-                                className="ad__code ad__code--click"
-                                onClick={() => copyToClipboard(`${row.countryCode}${row.phone}`, 'Phone Number')}
-                                title="Click to copy"
-                              >
-                                {row.countryCode}{row.phone}
-                              </code>
-                            ) : '—'}
-                          </td>
-                          <td>
-                            <span className={row.role === 'admin' ? 'ad__badge ad__badge--admin' : 'ad__badge ad__badge--emp'}>
-                              {row.role || 'employee'}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="ad__login">
-                              <Clock size={14} />
-                              {row.lastLogin || 'Never'}
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              className="ad__act-btn ad__act-btn--delete"
-                              onClick={() => promptDeleteUser(row.empId, [row.firstName, row.lastName].filter(Boolean).join(' '))}
-                              disabled={!!alertState || row.role === 'admin'}
-                              title={row.role === 'admin' ? 'Admin users cannot be deleted' : undefined}
-                            >
-                              <Trash2 size={20} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                            </td>
+                            <td>
+                              <span className="ad__login">
+                                <Clock size={14} />
+                                {row.lastLogin || 'Never'}
+                              </span>
+                            </td>
+                            <td>
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="ad__act-btn ad__act-btn--approve"
+                                    onClick={() => handleUpdateUser(row.empId)}
+                                    disabled={!!alertState}
+                                    title="Save changes"
+                                  >
+                                    <Check size={16} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="ad__act-btn ad__act-btn--decline"
+                                    onClick={cancelEdit}
+                                    disabled={!!alertState}
+                                    title="Cancel"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="ad__act-btn ad__act-btn--edit"
+                                    onClick={() => startEdit(row)}
+                                    disabled={!!alertState || !!editingRow}
+                                    title="Edit city & phone"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="ad__act-btn ad__act-btn--delete"
+                                    onClick={() => promptDeleteUser(row.empId, [row.firstName, row.lastName].filter(Boolean).join(' '))}
+                                    disabled={!!alertState || !!editingRow || row.role === 'admin'}
+                                    title={row.role === 'admin' ? 'Admin users cannot be deleted' : undefined}
+                                  >
+                                    <Trash2 size={20} />
+                                  </button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

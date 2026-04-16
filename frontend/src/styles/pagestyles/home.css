@@ -513,6 +513,63 @@
 .ad__act-btn--delete { color: #dc2626; }
 .ad__act-btn--delete:hover:not(:disabled) { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
 .ad__act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ad__act-btn--edit { color: #0369a1; }
+.ad__act-btn--edit:hover:not(:disabled) { background: #e0f2fe; border-color: #0369a1; }
+
+/* inline edit inputs */
+.ad__inline-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.35rem 2rem 0.35rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.5rem center;
+  color: #1e293b;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 7rem;
+}
+
+.ad__inline-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+
+.ad__inline-select--cc {
+  min-width: 4.5rem;
+  padding-right: 1.75rem;
+  border-radius: 0.4rem 0 0 0.4rem;
+  border-right: none;
+}
+
+.ad__inline-phone {
+  display: flex;
+  align-items: center;
+}
+
+.ad__inline-input {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0 0.4rem 0.4rem 0;
+  color: #1e293b;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 8rem;
+}
+
+.ad__inline-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+.ad__inline-input--error { border-color: #dc2626 !important; }
+.ad__inline-input--error:focus { box-shadow: 0 0 0 2px rgba(220,38,38,0.15) !important; }
+.ad__inline-phone .ad__inline-select--cc:focus { border-color: #3b82f6; }
+
+.ad__inline-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #dc2626;
+  font-weight: 500;
+}
 
 .ad__login { display: inline-flex; align-items: center; gap: 0.35rem; color: #64748b; white-space: nowrap; }
 

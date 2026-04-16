@@ -75,6 +75,28 @@ exports.getDashboard = async (req, res) => {
   }
 };
 
+exports.updateUserContact = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ message: 'User ID is required' });
+
+    const { city, phone, countryCode } = req.body;
+    const updateData = {};
+    if (city !== undefined) updateData.city = city.trim();
+    if (phone !== undefined) updateData.phone = phone.trim();
+    if (countryCode !== undefined) updateData.countryCode = countryCode.trim();
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'No valid fields provided' });
+    }
+
+    await userService.updateUser(userId, updateData);
+    res.status(200).json({ message: 'User updated successfully', ...updateData });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to update user', error: e.message });
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
