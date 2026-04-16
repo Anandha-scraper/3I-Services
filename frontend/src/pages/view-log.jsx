@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, X, ArrowLeft, FileDown } from 'lucide-react';
+import { AlertCircle, ArrowUpNarrowWide, ArrowDownNarrowWide, Filter, X, ArrowLeft, FileDown, Search, Calendar, Pin } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { Button, Pagination } from '../components/Button';
 import DatePicker from '../components/datepicker';
@@ -37,55 +37,95 @@ export default function ViewLogPage() {
   const [loading, setLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
   const [alert, setAlert] = useState(null);
-  
-  // Filters
+  const [filterLoading, setFilterLoading] = useState(false);
+
+  // Type filter
   const [filterType, setFilterType] = useState('all'); // all, credit, debit
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+
+  // Sort
   const [sortField, setSortField] = useState('timestamp');
   const [sortDir, setSortDir] = useState('desc');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(20);
 
-  // Filter modal state
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [tempDateFrom, setTempDateFrom] = useState('');
-  const [tempDateTo, setTempDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+  // ── Committed (applied) filters ──────────────────────
+  const [filterLedgerNames, setFilterLedgerNames] = useState([]);
+  const [filterUserIds, setFilterUserIds] = useState([]);
+  const [filterCreatedFrom, setFilterCreatedFrom] = useState('');
+  const [filterCreatedTo, setFilterCreatedTo] = useState('');
+  const [filterNextCallFrom, setFilterNextCallFrom] = useState('');
+  const [filterNextCallTo, setFilterNextCallTo] = useState('');
 
-  const today = () => new Date().toISOString().split('T')[0];
+  // ── Pending (editable in panel, not yet applied) ─────
+  const [tempLedgerNames, setTempLedgerNames] = useState([]);
+  const [tempUserIds, setTempUserIds] = useState([]);
+  const [tempCreatedFrom, setTempCreatedFrom] = useState('');
+  const [tempCreatedTo, setTempCreatedTo] = useState('');
+  const [tempNextCallFrom, setTempNextCallFrom] = useState('');
+  const [tempNextCallTo, setTempNextCallTo] = useState('');
 
-  const handleFilterApply = () => {
-    setDateFrom(tempDateFrom);
-    setDateTo(tempDateTo || today());
-    setCurrentPage(1);
-    setShowFilterModal(false);
-  };
+  // ── Pill input text fields ───────────────────────────
+  const [ledgerNameInput, setLedgerNameInput] = useState('');
+  const [userIdInput, setUserIdInput] = useState('');
 
-  const handleFilterCancel = () => {
-    setTempDateFrom(dateFrom);
-    setTempDateTo(dateTo);
-    setShowFilterModal(false);
-  };
+  // ── Suggestion dropdown visibility ───────────────────
+  const [showLedgerDropdown, setShowLedgerDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const handleFilterClear = (e) => {
-    e.stopPropagation();
-    const t = today();
-    setDateFrom(''); setDateTo(t);
-    setTempDateFrom(''); setTempDateTo(t);
-    setCurrentPage(1);
-  };
-
-  const formatShort = (iso) => {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  };
+  // ── Refs for click-outside detection ─────────────────
+  const ledgerDropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
 
   // Download modal state
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [dlDateFrom, setDlDateFrom] = useState('');
   const [dlDateTo, setDlDateTo] = useState('');
   const [downloading, setDownloading] = useState(false);
+
+  // ── Derived: unique values from loaded data ───────────
+  const uniqueLedgerNames = useMemo(() => (
+    [...new Set(logs.map(l => l.ledger_name).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  ), [logs]);
+
+  const uniqueUserIds = useMemo(() => (
+    [...new Set(logs.map(l => l.createdByUserId).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)))
+  ), [logs]);
+
+  // ── Filtered suggestion lists ────────────────────────
+  const filteredLedgerSuggestions = useMemo(() => {
+    const term = ledgerNameInput.toLowerCase();
+    return uniqueLedgerNames
+      .filter(n => !tempLedgerNames.includes(n) && (!term || n.toLowerCase().includes(term)))
+      .slice(0, 8);
+  }, [uniqueLedgerNames, ledgerNameInput, tempLedgerNames]);
+
+  const filteredUserSuggestions = useMemo(() => {
+    const term = userIdInput.toLowerCase();
+    return uniqueUserIds
+      .filter(id => !tempUserIds.includes(id) && (!term || String(id).toLowerCase().includes(term)))
+      .slice(0, 8);
+  }, [uniqueUserIds, userIdInput, tempUserIds]);
+
+  // ── Active filter count for badge ────────────────────
+  const activeFilterCount = useMemo(() => (
+    [filterLedgerNames.length > 0, filterUserIds.length > 0, !!filterCreatedFrom, !!filterNextCallFrom]
+      .filter(Boolean).length
+  ), [filterLedgerNames, filterUserIds, filterCreatedFrom, filterNextCallFrom]);
+
+  // ── Click-outside: close dropdowns ───────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      if (ledgerDropdownRef.current && !ledgerDropdownRef.current.contains(e.target)) {
+        setShowLedgerDropdown(false);
+      }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const fetchLogs = async () => {
     try {
@@ -116,6 +156,59 @@ export default function ViewLogPage() {
   useEffect(() => {
     fetchLogs();
   }, []);
+
+  // ── Filter action handlers ────────────────────────────
+  const handleApplyFilter = () => {
+    const hasSomething =
+      tempLedgerNames.length > 0 ||
+      tempUserIds.length > 0 ||
+      tempCreatedFrom ||
+      tempCreatedTo ||
+      tempNextCallFrom ||
+      tempNextCallTo;
+
+    if (!hasSomething) return; // nothing to apply
+
+    setFilterLoading(true);
+    // small delay so the loading UI is visible
+    setTimeout(() => {
+      setFilterLedgerNames(tempLedgerNames);
+      setFilterUserIds(tempUserIds);
+      setFilterCreatedFrom(tempCreatedFrom);
+      setFilterCreatedTo(tempCreatedTo);
+      setFilterNextCallFrom(tempNextCallFrom);
+      setFilterNextCallTo(tempNextCallTo);
+      setCurrentPage(1);
+      setFilterLoading(false);
+    }, 450);
+  };
+
+  const handleClearFilter = () => {
+    setTempLedgerNames([]); setFilterLedgerNames([]);
+    setTempUserIds([]); setFilterUserIds([]);
+    setTempCreatedFrom(''); setFilterCreatedFrom('');
+    setTempCreatedTo(''); setFilterCreatedTo('');
+    setTempNextCallFrom(''); setFilterNextCallFrom('');
+    setTempNextCallTo(''); setFilterNextCallTo('');
+    setLedgerNameInput('');
+    setUserIdInput('');
+    setCurrentPage(1);
+  };
+
+  // ── Pill helpers ──────────────────────────────────────
+  const addLedgerName = (name) => {
+    if (!tempLedgerNames.includes(name)) setTempLedgerNames(p => [...p, name]);
+    setLedgerNameInput('');
+    setShowLedgerDropdown(false);
+  };
+  const removeLedgerName = (name) => setTempLedgerNames(p => p.filter(n => n !== name));
+
+  const addUserId = (id) => {
+    if (!tempUserIds.includes(id)) setTempUserIds(p => [...p, id]);
+    setUserIdInput('');
+    setShowUserDropdown(false);
+  };
+  const removeUserId = (id) => setTempUserIds(p => p.filter(u => u !== id));
 
   const handleDownload = async () => {
     try {
@@ -157,8 +250,7 @@ export default function ViewLogPage() {
     {
       key: 'timestamp',
       label: 'Created At',
-      sortable: true,
-      width: '10%',
+      width: '8%',
       align: 'center',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
         {new Date(item.timestamp).toLocaleString('en-IN', {
@@ -238,30 +330,19 @@ export default function ViewLogPage() {
     {
       key: 'comments',
       label: 'Comments',
-      width: '30%',
-      align: 'center',
+      width: '34%',
+      align: 'left',
       highlightKey: 'comments',
+      cellClassName: 'view-log-comments-cell',
       render: (item) => (
-        <span style={{
-          fontSize: '0.85rem',
-          color: '#4b5563',
-          maxWidth: '200px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          display: 'inline-block',
-        }}>
+        <span style={{ fontSize: '0.85rem', color: '#4b5563' }}>
           {item.comments || '—'}
         </span>
       )
     },
   ], []);
 
-  const tableMinWidth = useMemo(() => {
-    return '100%';
-  }, [columns]);
-
-  // Filter logs step
+  // ── Filter + sort ─────────────────────────────────────
   const filteredLogs = useMemo(() => {
     let result = logs;
 
@@ -271,15 +352,42 @@ export default function ViewLogPage() {
       result = result.filter(log => log.ldebit > 0);
     }
 
-    // Date filter — only active when dateFrom is set; dateTo defaults to today
-    if (dateFrom) {
-      const from = new Date(dateFrom);
+    // Ledger name filter — OR across selected names, partial match
+    if (filterLedgerNames.length > 0) {
+      result = result.filter(log =>
+        filterLedgerNames.some(n => log.ledger_name?.toLowerCase().includes(n.toLowerCase()))
+      );
+    }
+
+    // User ID filter — exact match, any of selected
+    if (filterUserIds.length > 0) {
+      result = result.filter(log => filterUserIds.includes(log.createdByUserId));
+    }
+
+    // Created at date range
+    // If only From is given (no To), show that single day only
+    if (filterCreatedFrom) {
+      const from = new Date(filterCreatedFrom);
       from.setHours(0, 0, 0, 0);
-      const to = new Date(dateTo || new Date());
+      const to = new Date(filterCreatedTo || filterCreatedFrom); // same day if no To
       to.setHours(23, 59, 59, 999);
       result = result.filter(log => {
         const ts = new Date(log.timestamp);
         return ts >= from && ts <= to;
+      });
+    }
+
+    // Next call date range
+    // If only From is given (no To), show that single day only
+    if (filterNextCallFrom) {
+      const from = new Date(filterNextCallFrom);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(filterNextCallTo || filterNextCallFrom); // same day if no To
+      to.setHours(23, 59, 59, 999);
+      result = result.filter(log => {
+        if (!log.nextCallDate) return false;
+        const d = new Date(log.nextCallDate);
+        return d >= from && d <= to;
       });
     }
 
@@ -302,7 +410,13 @@ export default function ViewLogPage() {
     });
 
     return result;
-  }, [logs, filterType, dateFrom, dateTo, sortField, sortDir]);
+  }, [
+    logs, filterType,
+    filterLedgerNames, filterUserIds,
+    filterCreatedFrom, filterCreatedTo,
+    filterNextCallFrom, filterNextCallTo,
+    sortField, sortDir,
+  ]);
 
   const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
   const currentLogs = useMemo(() => {
@@ -321,7 +435,15 @@ export default function ViewLogPage() {
         />
       )}
 
-      {alert && (
+      {filterLoading && (
+        <Alert
+          type="loading"
+          title="Applying Filters…"
+          message="Filtering your activity logs, please wait."
+        />
+      )}
+
+      {!filterLoading && alert && (
         <Alert
           type={alert.type}
           title={alert.title}
@@ -340,133 +462,236 @@ export default function ViewLogPage() {
       </div>
 
       <div className="view-log-filters">
-        <div className="view-log-filter-row">
-          <div className="view-log-toggles">
-            <Button
-              variant={filterType === 'all' ? 'primary' : 'outline'}
-              onClick={() => { setFilterType('all'); setCurrentPage(1); }}
-            >
-              All Updates
-            </Button>
-            <Button
-              variant={filterType === 'credit' ? 'credit' : 'outline'}
-              onClick={() => { setFilterType('credit'); setCurrentPage(1); }}
-              className={filterType === 'credit' ? 'active' : ''}
-            >
-              Credit
-            </Button>
-            <Button
-              variant={filterType === 'debit' ? 'debit' : 'outline'}
-              onClick={() => { setFilterType('debit'); setCurrentPage(1); }}
-              className={filterType === 'debit' ? 'active' : ''}
-            >
-              Debit
-            </Button>
+
+        {/* Row 1: Sort by + Type toggles + Excel */}
+        <div className="vl-row1">
+          <div className="vl-sort-group">
+            <span className="vl-row-label">Sort by</span>
+            {[
+              { value: 'timestamp', label: 'Date' },
+              { value: 'ledger_name', label: 'Ledger Name' },
+              { value: 'nextCallDate', label: 'Next Call Date' },
+            ].map(({ value, label }) => (
+              <label key={value} className="vl-pill-radio">
+                <input
+                  type="radio"
+                  name="sortField"
+                  value={value}
+                  checked={sortField === value}
+                  onChange={() => { setSortField(value); setCurrentPage(1); }}
+                />
+                {label}
+              </label>
+            ))}
+            <span className="vl-sep" />
+            {[
+              { value: 'asc', icon: <ArrowUpNarrowWide size={13} />, label: 'Asc' },
+              { value: 'desc', icon: <ArrowDownNarrowWide size={13} />, label: 'Desc' },
+            ].map(({ value, icon, label }) => (
+              <label key={value} className="vl-pill-radio">
+                <input
+                  type="radio"
+                  name="sortDir"
+                  value={value}
+                  checked={sortDir === value}
+                  onChange={() => setSortDir(value)}
+                />
+                {icon}{label}
+              </label>
+            ))}
           </div>
-          <div className="view-log-actions">
-            <button
-              type="button"
-              className={`view-log-filter-btn${dateFrom ? ' active' : ''}`}
-              onClick={() => { setTempDateFrom(dateFrom); setTempDateTo(dateTo); setShowFilterModal(true); }}
-            >
-              <Filter size={14} />
-              <span className="filter-btn-label">
-                {dateFrom ? `${formatShort(dateFrom)} – ${formatShort(dateTo)}` : 'Filter'}
-              </span>
-              {dateFrom && (
-                <span className="filter-btn-clear" onClick={handleFilterClear}>
-                  <X size={12} />
+
+          <div className="vl-type-group">
+            <span className="vl-row-label">Filter</span>
+            {[
+              { value: 'all', label: 'All Updates' },
+              { value: 'credit', label: 'Credit' },
+              { value: 'debit', label: 'Debit' },
+            ].map(({ value, label }) => (
+              <label key={value} className={`vl-pill-radio vl-type-${value}`}>
+                <input
+                  type="radio"
+                  name="filterType"
+                  value={value}
+                  checked={filterType === value}
+                  onChange={() => { setFilterType(value); setCurrentPage(1); }}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            title="Download as Excel"
+            onClick={() => setShowDownloadModal(true)}
+            className="view-log-excel-btn"
+          >
+            <FileDown size={14} />
+            Excel
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="vl-divider" />
+
+        {/* Row 2: Filter fields left + Action buttons right */}
+        <div className="vl-row2">
+
+          {/* Fields grid */}
+          <div className="vl-row2-fields">
+
+            {/* Ledger Name */}
+            <div className="view-log-filter-group" ref={ledgerDropdownRef}>
+              <label className="view-log-filter-label">
+                <Search size={11} />
+                Ledger Name
+              </label>
+              <div className="view-log-pill-input">
+                {tempLedgerNames.map(name => (
+                  <span key={name} className="view-log-pill">
+                    <span className="view-log-pill-text">{name}</span>
+                    <button type="button" className="view-log-pill-remove" onClick={() => removeLedgerName(name)}>
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  className="view-log-pill-input-field"
+                  placeholder={tempLedgerNames.length === 0 ? 'Type to search…' : 'Add more…'}
+                  value={ledgerNameInput}
+                  onChange={e => { setLedgerNameInput(e.target.value); setShowLedgerDropdown(true); }}
+                  onFocus={() => setShowLedgerDropdown(true)}
+                />
+              </div>
+              {showLedgerDropdown && filteredLedgerSuggestions.length > 0 && (
+                <ul className="view-log-suggestions">
+                  {filteredLedgerSuggestions.map(name => (
+                    <li key={name} className="view-log-suggestion-item" onMouseDown={() => addLedgerName(name)}>
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* User ID */}
+            <div className="view-log-filter-group" ref={userDropdownRef}>
+              <label className="view-log-filter-label">
+                <Search size={11} />
+                User ID
+              </label>
+              <div className="view-log-pill-input">
+                {tempUserIds.map(id => (
+                  <span key={id} className="view-log-pill">
+                    <span className="view-log-pill-text">{id}</span>
+                    <button type="button" className="view-log-pill-remove" onClick={() => removeUserId(id)}>
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  className="view-log-pill-input-field"
+                  placeholder={tempUserIds.length === 0 ? 'Type to search…' : 'Add more…'}
+                  value={userIdInput}
+                  onChange={e => { setUserIdInput(e.target.value); setShowUserDropdown(true); }}
+                  onFocus={() => setShowUserDropdown(true)}
+                />
+              </div>
+              {showUserDropdown && filteredUserSuggestions.length > 0 && (
+                <ul className="view-log-suggestions">
+                  {filteredUserSuggestions.map(id => (
+                    <li key={id} className="view-log-suggestion-item" onMouseDown={() => addUserId(id)}>
+                      {id}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Created At range */}
+            <div className="view-log-filter-group">
+              <label className="view-log-filter-label">
+                <Calendar size={11} />
+                Created At
+              </label>
+              <div className="vl-date-range">
+                <DatePicker
+                  value={tempCreatedFrom}
+                  onChange={val => { setTempCreatedFrom(val); if (!val) setTempCreatedTo(''); }}
+                  flow="currentMonth"
+                />
+                <span className="view-log-date-sep">→</span>
+                <DatePicker
+                  value={tempCreatedTo}
+                  onChange={setTempCreatedTo}
+                  disabled={!tempCreatedFrom}
+                  flow="currentMonth"
+                />
+              </div>
+              {tempCreatedFrom && !tempCreatedTo && (
+                <span className="view-log-date-hint">
+                  <Pin size={9} />
+                  {new Date(tempCreatedFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               )}
-            </button>
-            <button
-              type="button"
-              title="Download as Excel"
-              onClick={() => setShowDownloadModal(true)}
-              className="view-log-excel-btn"
-            >
-              <FileDown size={14} />
-              Excel
-            </button>
-          </div>
-        </div>
-        <div className="view-log-sort-row">
-          <span className="view-log-sort-label">Sort by:</span>
-          {[
-            { value: 'timestamp', label: 'Date' },
-            { value: 'ledger_name', label: 'Ledger Name' },
-            { value: 'nextCallDate', label: 'Next Call Date' },
-          ].map(({ value, label }) => (
-            <label key={value} className="view-log-sort-radio">
-              <input
-                type="radio"
-                name="sortField"
-                value={value}
-                checked={sortField === value}
-                onChange={() => { setSortField(value); setCurrentPage(1); }}
-              />
-              {label}
-            </label>
-          ))}
-          <span className="view-log-sort-sep" />
-          {[
-            { value: 'asc', label: '↑ Asc' },
-            { value: 'desc', label: '↓ Desc' },
-          ].map(({ value, label }) => (
-            <label key={value} className="view-log-sort-radio">
-              <input
-                type="radio"
-                name="sortDir"
-                value={value}
-                checked={sortDir === value}
-                onChange={() => setSortDir(value)}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </div>
+              {tempCreatedFrom && tempCreatedTo && (
+                <span className="view-log-date-hint"><Pin size={9} /> Range selected</span>
+              )}
+            </div>
 
-      {showFilterModal && (
-        <div
-          className="filter-modal-backdrop"
-          onClick={(e) => { if (e.target === e.currentTarget) handleFilterCancel(); }}
-        >
-          <div className="filter-modal-card">
-            <div className="filter-modal-header">
-              <div className="filter-modal-icon">
-                <Filter size={18} color="#2563eb" />
-              </div>
-              <h3 className="filter-modal-title">Filter by Date</h3>
-            </div>
-            <div className="filter-modal-fields">
-              <div className="filter-modal-field">
-                <label className="filter-modal-label">From Date</label>
+            {/* Next Call Date range */}
+            <div className="view-log-filter-group">
+              <label className="view-log-filter-label">
+                <Calendar size={11} />
+                Next Call
+              </label>
+              <div className="vl-date-range">
                 <DatePicker
-                  value={tempDateFrom}
-                  onChange={(val) => { setTempDateFrom(val); if (!val) setTempDateTo(today()); }}
+                  value={tempNextCallFrom}
+                  onChange={val => { setTempNextCallFrom(val); if (!val) setTempNextCallTo(''); }}
+                  flow="currentMonth"
+                />
+                <span className="view-log-date-sep">→</span>
+                <DatePicker
+                  value={tempNextCallTo}
+                  onChange={setTempNextCallTo}
+                  disabled={!tempNextCallFrom}
                   flow="currentMonth"
                 />
               </div>
-              <div className="filter-modal-field">
-                <label className="filter-modal-label" style={{ opacity: tempDateFrom ? 1 : 0.5 }}>To Date</label>
-                <DatePicker
-                  value={tempDateTo}
-                  onChange={setTempDateTo}
-                  flow="currentMonth"
-                />
-              </div>
+              {tempNextCallFrom && !tempNextCallTo && (
+                <span className="view-log-date-hint">
+                  <Pin size={9} />
+                  {new Date(tempNextCallFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              )}
+              {tempNextCallFrom && tempNextCallTo && (
+                <span className="view-log-date-hint"><Pin size={9} /> Range selected</span>
+              )}
             </div>
-            <div className="filter-modal-actions">
-              <Button variant="outline" onClick={handleFilterCancel}>Cancel</Button>
-              <button type="button" className="filter-apply-btn" onClick={handleFilterApply}>
-                <Filter size={14} />
-                Filter
-              </button>
-            </div>
+
+          </div>{/* end vl-row2-fields */}
+
+          {/* Actions — right side, aligned to bottom */}
+          <div className="vl-actions">
+            <button type="button" className="view-log-filter-clear-btn" onClick={handleClearFilter}>
+              Clear
+            </button>
+            <button type="button" className="view-log-filter-apply-btn" onClick={handleApplyFilter}>
+              <Filter size={13} />
+              Apply Filter
+              {activeFilterCount > 0 && (
+                <span className="view-log-filter-badge">{activeFilterCount}</span>
+              )}
+            </button>
           </div>
+
         </div>
-      )}
+
+      </div>
 
       {showDownloadModal && (
         <div
@@ -594,6 +819,7 @@ export default function ViewLogPage() {
                         return (
                           <td
                             key={col.key}
+                            className={col.cellClassName || ''}
                             style={{
                               width: col.width,
                               textAlign: col.align || 'center',

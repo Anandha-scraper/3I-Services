@@ -702,9 +702,9 @@
   background: rgba(139, 92, 246, 0.04);
 }
 
-.col-user { width: 18%; }
-.col-time { width: 26%; }
-.col-comment { width: 56%; }
+.col-user { width: 15%; }
+.col-time { width: 50%; }
+.col-comment { width: auto; }
 
 .col-user-cell {
   font-weight: 600;
