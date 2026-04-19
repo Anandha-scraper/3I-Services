@@ -49,12 +49,12 @@ env:
   # UPDATE after first deploy — your main backend URLthreei-services-crm
   - variable: CORS_ORIGIN
     availability: [RUNTIME]
-    value: "crm.3iservices.com"
+    value: "https://threeiservices-crm-dev--threei-services-crm.asia-southeast1.hosted.app/login
 
   #declare of database use for production or development
   - variable: FIRESTORE_DB_ID
     availability: [RUNTIME]
-    value: "production"
+    value: "development"
 
   # Environment variables (sensitive) — stored in Google Secret Manager
 
