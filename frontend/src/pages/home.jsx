@@ -39,6 +39,7 @@ function initials(first, last) {
 }
 
 function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adminData, setAdminData, activeAdminList, setActiveAdminList }) {
+  const { user: currentUser } = useAuth();
   const [data, setData] = useState(adminData);
   const [loading, setLoading] = useState(!adminData);
   const [error, setError] = useState(null);
@@ -397,8 +398,8 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
                                     type="button"
                                     className="ad__act-btn ad__act-btn--edit"
                                     onClick={() => startEdit(row)}
-                                    disabled={!!alertState || !!editingRow}
-                                    title="Edit city & phone"
+                                    disabled={!!alertState || !!editingRow || row.role === 'admin'}
+                                    title={row.role === 'admin' ? 'Admin users cannot be edited' : 'Edit city & phone'}
                                   >
                                     <Pencil size={16} />
                                   </button>
@@ -406,8 +407,8 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
                                     type="button"
                                     className="ad__act-btn ad__act-btn--delete"
                                     onClick={() => promptDeleteUser(row.empId, [row.firstName, row.lastName].filter(Boolean).join(' '))}
-                                    disabled={!!alertState || !!editingRow || row.role === 'admin'}
-                                    title={row.role === 'admin' ? 'Admin users cannot be deleted' : undefined}
+                                    disabled={!!alertState || !!editingRow || row.role === 'admin' || row.empId === currentUser?.empId}
+                                    title={row.role === 'admin' ? 'Admin users cannot be deleted' : row.empId === currentUser?.empId ? 'Cannot delete your own account' : undefined}
                                   >
                                     <Trash2 size={20} />
                                   </button>

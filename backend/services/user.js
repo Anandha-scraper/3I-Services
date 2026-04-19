@@ -59,19 +59,23 @@ class UserService {
     const user = await this.findByUserId(userId);
     if (!user) throw new Error('User not found in database');
 
-    if (user.email) {
-      try {
-        const authUser = await auth.getUserByEmail(user.email.toLowerCase().trim());
-        await auth.deleteUser(authUser.uid);
-      } catch (error) {
-        console.warn(`Could not delete from Firebase Auth: ${error.code || error.message}`);
-      }
-    }
-
+    // Delete from Firestore first — this is the source of truth
     try {
       await this.collection.doc(user.id).delete();
     } catch (error) {
       throw new Error(`Database deletion failed: ${error.message}`);
+    }
+
+    // Fire-and-forget Firebase Auth deletion — don't block on it.
+    // The App Hosting service account may lack Firebase Auth Admin IAM role,
+    // causing auth calls to hang before failing. Firestore deletion already
+    // prevents the user from logging in through the app.
+    if (user.email) {
+      auth.getUserByEmail(user.email.toLowerCase().trim())
+        .then((authUser) => auth.deleteUser(authUser.uid))
+        .catch((error) => {
+          console.warn(`Could not delete from Firebase Auth: ${error.code || error.message}`);
+        });
     }
 
     return true;
