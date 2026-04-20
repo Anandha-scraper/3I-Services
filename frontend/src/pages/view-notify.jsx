@@ -38,10 +38,7 @@ export default function NotifyPage() {
       }
 
       const data = await res.json();
-      const sortedLedgers = (Array.isArray(data.rows) ? data.rows : []).sort(
-        (a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
-      );
-      setLedgers(sortedLedgers);
+      setLedgers(Array.isArray(data.rows) ? data.rows : []);
       setNextCursor(data.nextCursor || null);
       setAlert(null);
     } catch (err) {
@@ -104,6 +101,13 @@ export default function NotifyPage() {
       label: 'Group',
       width: '150px',
       align: 'center',
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      width: '100px',
+      align: 'center',
+      render: (item) => item.category != null ? item.category : '—',
     },
     {
       key: 'debit',

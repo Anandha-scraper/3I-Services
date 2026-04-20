@@ -109,7 +109,7 @@ class ExcelMasterService {
   async list(opts = {}) {
     const raw = opts.limit != null ? parseInt(String(opts.limit), 10) : 500;
     const limit = Math.min(Math.max(Number.isNaN(raw) ? 500 : raw, 1), 2000);
-    const snapshot = await this.collection.orderBy('importedAt', 'desc').limit(limit).get();
+    const snapshot = await this.collection.orderBy('ledger_id', 'asc').limit(limit).get();
     const rows = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
@@ -128,7 +128,7 @@ class ExcelMasterService {
    * @returns {{ rows: object[], nextCursor: number|null }}
    */
   async listPaged(opts = {}) {
-    let query = this.collection.orderBy('ledger_id', 'asc').limit(15);
+    let query = this.collection.orderBy('ledger_id', 'desc  ');
     if (opts.after != null) {
       query = query.startAfter(String(opts.after));
     }

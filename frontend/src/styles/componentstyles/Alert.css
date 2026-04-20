@@ -722,6 +722,13 @@
   font-family: 'Courier New', monospace;
 }
 
+.alert-error-reason {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.72rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
 /* ========== SHARED PAGE BACK BUTTON (desktop only) ========== */
 .page-back-btn {
   display: inline-flex;

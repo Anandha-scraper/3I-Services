@@ -237,14 +237,15 @@ class LedgerRemainderService {
 
   async listPaged(opts = {}) {
     const city = opts.city ? String(opts.city).trim().toLowerCase() : null;
-    // Sort: nextCallDate DESC (records with a date set appear before undated ''), then ledger_id ASC as tiebreaker.
-    // Requires composite indexes: [nextCallDate DESC, ledger_id ASC] and [city ASC, nextCallDate DESC, ledger_id ASC].
+    // Sort: category ASC, nextCallDate ASC, debit DESC, ledger_id ASC.
+    // Requires composite indexes:
+    //   [category ASC, nextCallDate ASC, debit DESC, ledger_id ASC]
+    //   [city ASC, category ASC, nextCallDate ASC, debit DESC, ledger_id ASC]
     let query = city
-      ? this.collection.where('city', '==', city).orderBy('nextCallDate', 'desc').orderBy('ledger_id', 'asc').limit(15)
-      : this.collection.orderBy('nextCallDate', 'desc').orderBy('ledger_id', 'asc').limit(15);
+      ? this.collection.where('city', '==', city).orderBy('category', 'asc').orderBy('nextCallDate', 'asc').orderBy('debit', 'desc').orderBy('ledger_id', 'asc').limit(15)
+      : this.collection.orderBy('category', 'asc').orderBy('nextCallDate', 'asc').orderBy('debit', 'desc').orderBy('ledger_id', 'asc').limit(15);
     if (opts.after != null) {
-      // Composite cursor: { nextCallDate, ledger_id } from the last row of the previous page.
-      query = query.startAfter(opts.after.nextCallDate ?? '', opts.after.ledger_id);
+      query = query.startAfter(opts.after.category ?? 0, opts.after.nextCallDate ?? '', opts.after.debit ?? 0, opts.after.ledger_id);
     }
     const snapshot = await query.get();
     const rows = [];
@@ -261,7 +262,7 @@ class LedgerRemainderService {
     const lastRow = rows.length === 15 ? rows[rows.length - 1] : null;
     return {
       rows,
-      nextCursor: lastRow ? { nextCallDate: lastRow.nextCallDate ?? '', ledger_id: lastRow.ledger_id } : null,
+      nextCursor: lastRow ? { category: lastRow.category ?? 0, nextCallDate: lastRow.nextCallDate ?? '', debit: lastRow.debit ?? 0, ledger_id: lastRow.ledger_id } : null,
     };
   }
 

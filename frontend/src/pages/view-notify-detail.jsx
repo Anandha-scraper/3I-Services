@@ -332,6 +332,9 @@ export default function NotifyDetailPage() {
             {ledgerData?.group && (
               <span className="ledger-group-badge">{ledgerData.group}</span>
             )}
+            {ledgerData?.category != null && (
+              <span className="ledger-category-badge">Cat: {ledgerData.category}</span>
+            )}
           </div>
 
           {ledgerData && (

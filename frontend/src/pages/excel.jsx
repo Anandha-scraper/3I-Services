@@ -159,17 +159,25 @@ export default function ExcelPage() {
         if (fileInputRef.current) fileInputRef.current.value = '';
       };
 
-      // Handle outstanding upload success with validation results
+      // Handle outstanding upload — error alert if invalid categories found, else success
       if (fileType === 'outstanding') {
-        setAlert({
-          type: 'success',
-          title: 'Upload Successful',
-          stats: {
-            type: 'outstanding',
-            fileName: data.fileName,
-          },
-          onConfirm: resetAlert,
-        });
+        const invalidCatRecords = (data.notFound || []).filter(r => r.reason === 'Invalid Category Found');
+        if (invalidCatRecords.length > 0) {
+          setAlert({
+            type: 'error',
+            title: 'Invalid Category Number',
+            message: `${invalidCatRecords.length} record(s) have an invalid category. Category must be a number between 1 and 6.`,
+            onConfirm: resetAlert,
+            onCancel: resetAlert,
+          });
+        } else {
+          setAlert({
+            type: 'success',
+            title: 'Upload Successful',
+            stats: { type: 'outstanding', fileName: data.fileName },
+            onConfirm: resetAlert,
+          });
+        }
       } else {
         // Master upload success
         setAlert({
