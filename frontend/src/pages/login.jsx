@@ -961,7 +961,7 @@ export default function LoginPage() {
       </div>
 
       {/* Dynamic Sentence Footer */}
-      <div className={`absolute bottom-12 flex z-40 text-center px-4 drop-shadow-lg transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+      <div className={`absolute bottom-20 flex flex-col items-center z-40 text-center px-4 drop-shadow-lg transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${
         (activePanel === 'login' || activePanel === 'forgot') ? 'md:translate-x-[225px]' : activePanel === 'signup' ? 'md:-translate-x-[225px]' : 'translate-x-0'
       }`}>
         <p className="text-lg sm:text-2xl text-rose-700/70 font-light tracking-wide">
@@ -1012,12 +1012,12 @@ export default function LoginPage() {
       onClick={handleEmailCardClick}
       onMouseEnter={() => setEmailCardHovered(true)}
       onMouseLeave={() => setEmailCardHovered(false)}
-      className={`dn-card fixed bottom-4 z-[100] flex items-center px-4 md:px-5 rounded-xl md:rounded-2xl cursor-pointer select-none no-underline overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]
-        left-0 right-0 mx-auto md:mx-0 md:left-auto md:right-5 md:bottom-5
+      className={`dn-card absolute bottom-4 z-[100] flex items-center justify-center px-4 md:px-5 rounded-xl md:rounded-2xl cursor-pointer select-none no-underline overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]
+        left-0 right-0 mx-auto
         w-[82%] md:w-[280px] ${
         activePanel !== null ? 'max-md:opacity-0 max-md:pointer-events-none max-md:translate-y-10' : ''
       } ${
-        activePanel === 'signup' ? 'md:-translate-x-[460px]' : 'translate-x-0'
+        activePanel === 'signup' ? 'md:-translate-x-[225px]' : activePanel === 'login' || activePanel === 'forgot' ? 'md:translate-x-[225px]' : 'translate-x-0'
       }`}
       style={{
         height: '38px',

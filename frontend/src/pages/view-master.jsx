@@ -34,6 +34,7 @@ function formatCell(value) {
 export default function ViewDataPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [showLoader, setShowLoader] = useState(true);
   const [rowAlert, setRowAlert] = useState(null);
   const [checkingRow, setCheckingRow] = useState(false);
@@ -136,12 +137,14 @@ export default function ViewDataPage() {
   const handleRowClick = useCallback(async (row) => {
     if (!row.ledger_id || checkingRow) return;
 
-    // City authorization check
-    const userCity = user?.city?.trim().toLowerCase();
-    const rowCity = row?.city?.trim().toLowerCase();
-    if (userCity && rowCity && userCity !== rowCity) {
-      setRowAlert({ type: 'error', title: 'Not Authorized', message: 'Not authorized for your city' });
-      return;
+    // City authorization check (admins bypass)
+    if (!isAdmin) {
+      const userCity = user?.city?.trim().toLowerCase();
+      const rowCity = row?.city?.trim().toLowerCase();
+      if (userCity && rowCity && userCity !== rowCity) {
+        setRowAlert({ type: 'error', title: 'Not Authorized', message: 'Not authorized for your city' });
+        return;
+      }
     }
 
     setCheckingRow(true);
@@ -158,7 +161,7 @@ export default function ViewDataPage() {
     } finally {
       setCheckingRow(false);
     }
-  }, [checkingRow, navigate, user?.city]);
+  }, [checkingRow, isAdmin, navigate, user?.city]);
 
   const showTable = !isLoading && !isError && columns.length > 0;
 
