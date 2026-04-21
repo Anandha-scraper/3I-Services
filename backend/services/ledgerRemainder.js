@@ -92,7 +92,7 @@ class LedgerRemainderService {
         query = query.where('city', '==', city);
       }
       const snapshot = await query
-        .orderBy('updatedAt', 'desc')
+        .orderBy('ledger_name', 'asc')
         .limit(limit)
         .get();
 

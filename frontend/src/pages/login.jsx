@@ -899,7 +899,7 @@ export default function LoginPage() {
                       width={600}
                       height={384}
                       loading={index === activeIndex ? 'eager' : 'lazy'}
-                      fetchPriority={index === activeIndex ? 'high' : 'low'}
+                      fetchpriority={index === activeIndex ? 'high' : 'low'}
                       decoding="async"
                       onLoad={() => handleImageLoad(card.id)}
                       className={`w-full h-full object-cover transition-opacity duration-500 ${
@@ -1079,19 +1079,17 @@ export default function LoginPage() {
               <span style={{ fontSize: '11px', fontWeight: 600, color: '#881337', letterSpacing: '-0.01em', whiteSpace: 'nowrap', flex: 1 }}>
                 decanode10@gmail.com
               </span>
-              <a
-                href="https://mail.google.com/mail/?view=cm&to=decanode10@gmail.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); window.open('https://mail.google.com/mail/?view=cm&to=decanode10@gmail.com', '_blank', 'noopener,noreferrer'); }}
                 className="shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
-                style={{ width: '22px', height: '22px', background: 'linear-gradient(135deg, #be123c, #9f1239)', boxShadow: '0 2px 8px rgba(190,18,60,0.4)' }}
+                style={{ width: '22px', height: '22px', background: 'linear-gradient(135deg, #be123c, #9f1239)', boxShadow: '0 2px 8px rgba(190,18,60,0.4)', border: 'none', cursor: 'pointer' }}
                 title="Send mail to DecaNode"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9l20-7z"/>
                 </svg>
-              </a>
+              </button>
             </div>
           </div>
         );

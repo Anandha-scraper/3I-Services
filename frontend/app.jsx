@@ -6,7 +6,6 @@ import Dashboard from './src/components/Dashboard';
 const LoginPage = lazy(() => import('./src/pages/login'));
 const HomePage = lazy(() => import('./src/pages/home'));
 const ExcelPage = lazy(() => import('./src/pages/excel'));
-const ExcelMasterPage = lazy(() => import('./src/pages/excel-master'));
 const ViewPage = lazy(() => import('./src/pages/view'));
 const ViewDataPage = lazy(() => import('./src/pages/view-master'));
 const NotifyPage = lazy(() => import('./src/pages/view-notify'));
@@ -63,15 +62,6 @@ function App() {
             element={
               <AdminRoute activeTab="excel">
                 <ExcelPage />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/excel-master"
-            element={
-              <AdminRoute activeTab="excel">
-                <ExcelMasterPage />
               </AdminRoute>
             }
           />

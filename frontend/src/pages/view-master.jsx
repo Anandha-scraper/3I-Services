@@ -189,7 +189,8 @@ export default function ViewDataPage() {
       {showTable && (
         <div className="view-master-table-section">
           <div className="view-master-toolbar">
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1 }}>
+            <h1 className="view-master-title">Master Data :</h1>
+            <div className="view-master-toolbar-search-group">
               <SearchBar
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

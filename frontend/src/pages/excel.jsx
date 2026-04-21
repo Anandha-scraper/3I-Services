@@ -43,7 +43,10 @@ export default function ExcelPage() {
 
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !fileType) return;
+    if (!file || !fileType) {
+      if (!file && fileType) setActiveCard(null);
+      return;
+    }
 
     const card = cards.find(c => c.id === fileType);
     setUploadProgress(0);
@@ -200,6 +203,7 @@ export default function ExcelPage() {
       setUploadProgress(0);
       setUploadSpeed(0);
       setUploadPhase('uploading');
+      setActiveCard(null);
       console.error('Upload error:', error);
       setAlert({
         type: 'error',

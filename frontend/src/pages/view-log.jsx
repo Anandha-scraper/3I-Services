@@ -251,6 +251,8 @@ export default function ViewLogPage() {
       key: 'timestamp',
       label: 'Created At',
       width: '8%',
+      minWidth: '6%',
+      maxWidth: '12%',
       align: 'left',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
         {new Date(item.timestamp).toLocaleString('en-IN', {
@@ -263,6 +265,8 @@ export default function ViewLogPage() {
       key: 'ledger_name',
       label: 'Ledger Name',
       width: '14%',
+      minWidth: '10%',
+      maxWidth: '20%',
       align: 'left',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#1f2937', fontWeight: 500 }}>{item.ledger_name || '—'}</span>
     },
@@ -270,6 +274,8 @@ export default function ViewLogPage() {
       key: 'createdByUserId',
       label: 'User ID',
       width: '8%',
+      minWidth: '5%',
+      maxWidth: '12%',
       align: 'left',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>{item.createdByUserId || '-'}</span>
     },
@@ -277,6 +283,8 @@ export default function ViewLogPage() {
       key: 'operation',
       label: 'Type',
       width: '8%',
+      minWidth: '5%',
+      maxWidth: '10%',
       align: 'left',
       render: (item) => (
         <span style={{
@@ -295,6 +303,8 @@ export default function ViewLogPage() {
       key: 'ldebit',
       label: 'Debit',
       width: '8%',
+      minWidth: '6%',
+      maxWidth: '12%',
       align: 'center',
       highlightKey: 'ldebit',
       render: (item) => {
@@ -307,6 +317,8 @@ export default function ViewLogPage() {
       key: 'lcredit',
       label: 'Credit',
       width: '8%',
+      minWidth: '6%',
+      maxWidth: '12%',
       align: 'center',
       highlightKey: 'lcredit',
       render: (item) => {
@@ -319,6 +331,8 @@ export default function ViewLogPage() {
       key: 'nextCallDate',
       label: 'Next Call Date',
       width: '12%',
+      minWidth: '8%',
+      maxWidth: '16%',
       align: 'left',
       highlightKey: 'nextCallDate',
       render: (item) => (
@@ -331,6 +345,8 @@ export default function ViewLogPage() {
       key: 'comments',
       label: 'Comments',
       width: '34%',
+      minWidth: '20%',
+      maxWidth: '45%',
       align: 'left',
       highlightKey: 'comments',
       cellClassName: 'view-log-comments-cell',
@@ -786,7 +802,7 @@ export default function ViewLogPage() {
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      style={{ width: col.width, textAlign: col.align || 'center', cursor: col.sortable ? 'pointer' : 'default', userSelect: col.sortable ? 'none' : 'auto' }}
+                      style={{ width: col.width, minWidth: col.minWidth, maxWidth: col.maxWidth, textAlign: col.align || 'center', cursor: col.sortable ? 'pointer' : 'default', userSelect: col.sortable ? 'none' : 'auto' }}
                       onClick={col.sortable ? () => { setSortField('timestamp'); setSortDir(prev => prev === 'desc' ? 'asc' : 'desc'); } : undefined}
                     >
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -822,6 +838,8 @@ export default function ViewLogPage() {
                             className={col.cellClassName || ''}
                             style={{
                               width: col.width,
+                              minWidth: col.minWidth,
+                              maxWidth: col.maxWidth,
                               textAlign: col.align || 'center',
                               padding: '12px 8px',
                               borderBottom: '1px solid #e5e7eb',

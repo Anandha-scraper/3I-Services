@@ -9,8 +9,6 @@ import { Pagination } from '../components/Button';
 import '../styles/pagestyles/view-notify.css';
 import '../styles/componentstyles/Alert.css';
 
-const PAGE_SIZE = 15;
-
 export default function NotifyPage() {
   // Cursor stack — last element is the current page's cursor (null = page 1)
   const [cursorStack, setCursorStack] = useState([null]);

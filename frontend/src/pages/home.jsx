@@ -32,11 +32,6 @@ function formatRequestDate(iso) {
   }
 }
 
-function initials(first, last) {
-  const a = (first || '').trim().charAt(0);
-  const b = (last || '').trim().charAt(0);
-  return (a + b).toUpperCase() || '?';
-}
 
 function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adminData, setAdminData, activeAdminList, setActiveAdminList }) {
   const { user: currentUser } = useAuth();
@@ -649,7 +644,7 @@ function UserGreetingBanner({ user, stats, onEmployeeCardClick, isEmployeeCardEx
 
           {isAdmin ? (
             <div
-              className={`ub__card ub__card--manage ${isEmployeeCardExpanded ? 'ub__card--manage-active' : ''}`}
+              className="ub__card ub__card--manage"
               onClick={onEmployeeCardClick}
               role="button"
               tabIndex={0}

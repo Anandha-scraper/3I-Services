@@ -46,6 +46,14 @@
       ]
     },
     {
+      "collectionGroup": "Outstanding_Remainder",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "city", "order": "ASCENDING" },
+        { "fieldPath": "ledger_name", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "Ledger_logs",
       "queryScope": "COLLECTION",
       "fields": [
