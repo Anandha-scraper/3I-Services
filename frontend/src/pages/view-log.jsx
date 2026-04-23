@@ -251,8 +251,7 @@ export default function ViewLogPage() {
     {
       key: 'timestamp',
       label: 'Created At',
-      minWidth: '7%',
-      maxWidth: '14%',
+      width: '12%',
       align: 'left',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
         {new Date(item.timestamp).toLocaleString('en-IN', {
@@ -264,24 +263,21 @@ export default function ViewLogPage() {
     {
       key: 'ledger_name',
       label: 'Ledger Name',
-      minWidth: '6%',
-      maxWidth: '15%',
+      width: '18%',
       align: 'left',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#1f2937', fontWeight: 500 }}>{item.ledger_name || '—'}</span>
     },
     {
       key: 'createdByUserId',
       label: 'User ID',
-      minWidth: '5%',
-      maxWidth: '12%',
+      width: '10%',
       align: 'left',
       render: (item) => <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>{item.createdByUserId || '-'}</span>
     },
     {
       key: 'ldebit',
       label: 'Debit',
-      minWidth: '4%',
-      maxWidth: '9%',
+      width: '10%',
       align: 'center',
       highlightKey: 'ldebit',
       render: (item) => {
@@ -293,8 +289,7 @@ export default function ViewLogPage() {
     {
       key: 'category',
       label: 'Category',
-      minWidth: '3%',
-      maxWidth: '3%',
+      width: '10%',
       align: 'center',
       render: (item) => (
         item.category
@@ -305,8 +300,7 @@ export default function ViewLogPage() {
     {
       key: 'nextCallDate',
       label: 'Next Call Date',
-      minWidth: '6%',
-      maxWidth: '10%',
+      width: '10%',
       align: 'left',
       highlightKey: 'nextCallDate',
       render: (item) => (
@@ -318,8 +312,7 @@ export default function ViewLogPage() {
     {
       key: 'comments',
       label: 'Comments',
-      minWidth: '20%',
-      maxWidth: '45%',
+      width: '30%',
       align: 'left',
       highlightKey: 'comments',
       cellClassName: 'view-log-comments-cell',
