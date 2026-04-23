@@ -1,7 +1,7 @@
 {
   "apphosting": {},
   "firestore": {
-    "database": "development",
+    "database": "main",
     "indexes": "firestore.indexes.json"
   }
 }
