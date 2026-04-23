@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useOutstandingsData } from '../hooks/useOutstandingsData';
+import { useAuth } from '../context/AuthContext';
+import { useAllOutstandingsData } from '../hooks/useAllOutstandingsData';
 import Table from '../components/Table';
-import { Pagination } from '../components/Button';
+import { SearchBar } from '../components/Button';
 import PageLoader from '../components/loading';
 import Alert from '../components/Alert';
 import '../styles/pagestyles/view-outstandings.css';
@@ -25,35 +26,21 @@ function formatDate(val) {
 
 export default function ViewOutstandingsPage() {
   const navigate = useNavigate();
-
-  // Cursor stack — last element is the current page's cursor (null = page 1)
-  const [cursorStack, setCursorStack] = useState([null]);
-  const [pageIndex, setPageIndex] = useState(1);
+  const { user } = useAuth();
   const [showLoader, setShowLoader] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
+  const { data, isLoading, isError, error, refetch } = useAllOutstandingsData(user?.userId);
 
+  const rows = data?.rows ?? [];
 
-  const currentCursor = cursorStack[cursorStack.length - 1];
-
-  // React Query: serves from 5-min cache on revisit, no Firestore reads
-  const { data, isLoading, isError, error, refetch } = useOutstandingsData(currentCursor);
-
-  const rows       = data?.rows       ?? [];
-  const nextCursor = data?.nextCursor ?? null;
-
-  const goNext = () => {
-    if (nextCursor == null) return;
-    setCursorStack(prev => [...prev, nextCursor]);
-    setPageIndex(p => p + 1);
-  };
-
-  const goPrev = () => {
-    if (cursorStack.length <= 1) return;
-    setCursorStack(prev => prev.slice(0, -1));
-    setPageIndex(p => p - 1);
-  };
-
-
+  const filteredRows = useMemo(() => {
+    if (!searchQuery.trim()) return rows;
+    const q = searchQuery.trim().toLowerCase();
+    return rows.filter(row =>
+      row.ledger_name != null && String(row.ledger_name).toLowerCase().includes(q)
+    );
+  }, [rows, searchQuery]);
 
   const columns = useMemo(() => [
     {
@@ -66,6 +53,12 @@ export default function ViewOutstandingsPage() {
       key: 'group',
       label: 'Group',
       width: '200px',
+      align: 'center',
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      width: '160px',
       align: 'center',
     },
     {
@@ -114,6 +107,13 @@ export default function ViewOutstandingsPage() {
 
       <div className="outstandings-header">
         <h1>Outstanding Data :</h1>
+        <div className="outstandings-header-search">
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search ledger name..."
+          />
+        </div>
         <button className="page-back-btn" onClick={() => navigate(-1)}>
           <ArrowLeft size={16} />
           Back
@@ -127,22 +127,13 @@ export default function ViewOutstandingsPage() {
           <div className="outstandings-table-container">
             <Table
               columns={columns}
-              data={rows}
+              data={filteredRows}
               noDataMessage="No ledger remainders found"
               striped={true}
               headerGradient={true}
               tableClassName="outstandings-table"
               containerClassName="outstandings-scroll-container"
               minWidth={800}
-              footer={
-                <Pagination
-                  currentPage={pageIndex}
-                  hasPrev={cursorStack.length > 1}
-                  hasNext={nextCursor != null}
-                  onPrev={goPrev}
-                  onNext={goNext}
-                />
-              }
             />
           </div>
         )}

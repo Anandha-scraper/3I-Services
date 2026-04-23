@@ -28,7 +28,9 @@
       "collectionGroup": "Outstanding_Remainder",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "nextCallDate", "order": "DESCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "nextCallDate", "order": "ASCENDING" },
+        { "fieldPath": "debit", "order": "DESCENDING" },
         { "fieldPath": "ledger_id", "order": "ASCENDING" }
       ]
     },
@@ -37,8 +39,18 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "city", "order": "ASCENDING" },
-        { "fieldPath": "nextCallDate", "order": "DESCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "nextCallDate", "order": "ASCENDING" },
+        { "fieldPath": "debit", "order": "DESCENDING" },
         { "fieldPath": "ledger_id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "Outstanding_Remainder",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "city", "order": "ASCENDING" },
+        { "fieldPath": "ledger_name", "order": "ASCENDING" }
       ]
     },
     {

@@ -41,7 +41,7 @@ export default function Alert({
   uploadSpeed = 0,
   uploadPhase = 'uploading',
   stats = {},
-  notFoundLedgers = [],
+  notFoundLedgers,
 }) {
   const alertCardRef = useRef(null);
 
@@ -228,11 +228,11 @@ export default function Alert({
               </div>
             )}
             
-            {/* Not Found Ledgers List */}
+            {/* Rejected Records List — shows ledger name, ID, and the reason (e.g. "Invalid Category Found") */}
             {notFoundLedgers && notFoundLedgers.length > 0 && (
               <div className="alert-warning-errors">
                 <h4 className="alert-warning-errors-title">
-                  Not Found Ledger Master ({notFoundLedgers.length})
+                  Rejected Records ({notFoundLedgers.length})
                 </h4>
                 <div className="alert-warning-errors-list">
                   {notFoundLedgers.map((ledger, idx) => (
@@ -242,6 +242,9 @@ export default function Alert({
                         <p className="alert-error-name">{ledger.ledger}</p>
                         {ledger.ledger_id && (
                           <p className="alert-error-id">{ledger.ledger_id}</p>
+                        )}
+                        {ledger.reason && (
+                          <p className="alert-error-reason">{ledger.reason}</p>
                         )}
                       </div>
                     </div>
@@ -302,9 +305,6 @@ export default function Alert({
                 </p>
               </div>
             </div>
-            {progress < 100 && (
-              <span className="alert-progress-badge">{progress}%</span>
-            )}
           </div>
 
           <div className="alert-file-card">

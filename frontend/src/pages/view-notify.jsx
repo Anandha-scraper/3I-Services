@@ -5,11 +5,9 @@ import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
 import PageLoader from '../components/loading';
 import Alert from '../components/Alert';
-import { SearchBar, Pagination } from '../components/Button';
+import { Pagination } from '../components/Button';
 import '../styles/pagestyles/view-notify.css';
 import '../styles/componentstyles/Alert.css';
-
-const PAGE_SIZE = 15;
 
 export default function NotifyPage() {
   // Cursor stack — last element is the current page's cursor (null = page 1)
@@ -18,7 +16,7 @@ export default function NotifyPage() {
   const [showLoader, setShowLoader] = useState(true);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+
   const [ledgers, setLedgers] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
   const navigate = useNavigate();
@@ -38,10 +36,7 @@ export default function NotifyPage() {
       }
 
       const data = await res.json();
-      const sortedLedgers = (Array.isArray(data.rows) ? data.rows : []).sort(
-        (a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
-      );
-      setLedgers(sortedLedgers);
+      setLedgers(Array.isArray(data.rows) ? data.rows : []);
       setNextCursor(data.nextCursor || null);
       setAlert(null);
     } catch (err) {
@@ -106,6 +101,13 @@ export default function NotifyPage() {
       align: 'center',
     },
     {
+      key: 'category',
+      label: 'Category',
+      width: '100px',
+      align: 'center',
+      render: (item) => item.category != null ? item.category : '—',
+    },
+    {
       key: 'debit',
       label: 'Debit',
       width: '130px',
@@ -121,29 +123,6 @@ export default function NotifyPage() {
     },
   ], []);
 
-  const filteredLedgers = useMemo(() => {
-    if (!searchTerm.trim()) return ledgers;
-    const lower = searchTerm.toLowerCase().trim();
-    return ledgers.filter(l => {
-      if (l.ledger_name && l.ledger_name.toLowerCase().includes(lower)) return true;
-      if (l.nextCallDate) {
-        try {
-          const date = new Date(l.nextCallDate);
-          const formatted = date.toLocaleDateString('en-IN', {
-            year: 'numeric', month: 'short', day: 'numeric',
-          }).toLowerCase();
-          if (formatted.includes(lower)) return true;
-          const parts = [
-            date.getFullYear().toString(),
-            String(date.getMonth() + 1).padStart(2, '0'),
-            String(date.getDate()).padStart(2, '0'),
-          ];
-          if (parts.some(p => p.includes(lower))) return true;
-        } catch {}
-      }
-      return false;
-    });
-  }, [ledgers, searchTerm]);
 
   const handleRowClick = (ledger) => {
     navigate('/view-notify-detail', { state: { row: ledger } });
@@ -183,26 +162,9 @@ export default function NotifyPage() {
           <div className="notify-loading">Loading...</div>
         ) : (
           <div className="notify-table-container">
-            <div className="notify-toolbar">
-              <SearchBar
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by ledger name or date..."
-                className="notify-search"
-              />
-              {searchTerm && (
-                <button
-                  className="notify-clear-btn"
-                  onClick={() => setSearchTerm('')}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
             <Table
               columns={columns}
-              data={filteredLedgers}
+              data={ledgers}
               noDataMessage="No ledger updates found"
               striped={true}
               headerGradient={true}

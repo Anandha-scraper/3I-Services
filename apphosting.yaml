@@ -1,3 +1,4 @@
+
 # Firebase App Hosting Configuration for Monorepo
 runtime: nodejs20
 
@@ -14,7 +15,7 @@ run:
 # Runtime configuration
 runConfig:
   cpu: 1       
-  memory: 1GiB 
+  memory: 512MiB
   minInstances: 0
   maxInstances: 30
   concurrency: 30
@@ -45,15 +46,15 @@ env:
     availability: [RUNTIME]
     value: "60"
 
-  # UPDATE after first deploy — your main backend URL
+  # UPDATE after first deploy — your main backend URLthreei-services-crm
   - variable: CORS_ORIGIN
     availability: [RUNTIME]
-    value: "crm.3iservices.com"
+    value: "https://threeiservices-crm-dev--threei-services-crm.asia-southeast1.hosted.app"
 
   #declare of database use for production or development
   - variable: FIRESTORE_DB_ID
     availability: [RUNTIME]
-    value: "production"
+    value: "development"
 
   # Environment variables (sensitive) — stored in Google Secret Manager
 
@@ -65,7 +66,7 @@ env:
     secret: projects/693049807057/secrets/JWT_SECRET
 
   - variable: EMAIL_USER
-    secret: projects/693049807057/secrets/EMAIL_USER
+    secret: projects/693049807057/secrets/EMAIL_USER/versions/2
 
   - variable: EMAIL_PASSWORD
-    secret: projects/693049807057/secrets/EMAIL_PASSWORD
+    secret: projects/693049807057/secrets/EMAIL_PASSWORD/versions/2

@@ -1,14 +1,29 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useMasterData } from '../hooks/useMasterData';
-// import { useUpdateLedger } from '../hooks/useUpdateLedger'; // wire up when inline editing is added
+import { useAllMasterData } from '../hooks/useAllMasterData';
+import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 import Table from '../components/Table';
-import { Pagination, SearchBar, Button, ExpandColumnsButton } from '../components/Button';
+import { SearchBar, Button, ExpandColumnsButton } from '../components/Button';
 import PageLoader from '../components/loading';
 import Alert from '../components/Alert';
 import '../styles/pagestyles/view-master.css';
 import '../styles/componentstyles/Alert.css';
+
+const COLUMN_LABELS = {
+  code: 'Code', type: 'Type', ledger: 'Ledger', city: 'City',
+  group: 'Group', name: 'Name', address1: 'Address 1', address2: 'Address 2',
+  address3: 'Address 3', pin: 'PIN', email: 'Email', site: 'Website',
+  contact: 'Contact', phone1: 'Phone 1', phone2: 'Phone 2', mobile: 'Mobile',
+  resi: 'Residence', fax: 'Fax', licence: 'Licence', tin: 'TIN',
+  stno: 'ST No.', panno: 'PAN No.', mr: 'MR', area: 'Area',
+  rout: 'Route', tpt: 'Transport', tptdlv: 'TPT Delivery',
+  bank: 'Bank', bankadd1: 'Bank Address 1', bankadd2: 'Bank Address 2',
+  branch: 'Branch', crdays: 'CR Days', cramount: 'CR Amount',
+  limitbill: 'Limit Bill', limitday: 'Limit Day', limittype: 'Limit Type',
+  freez: 'Freeze',
+};
 
 function formatCell(value) {
   if (value == null || value === '') return '—';
@@ -18,46 +33,25 @@ function formatCell(value) {
 
 export default function ViewDataPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [showLoader, setShowLoader] = useState(true);
+  const [rowAlert, setRowAlert] = useState(null);
+  const [checkingRow, setCheckingRow] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isColumnsExpanded, setIsColumnsExpanded] = useState(false);
 
-  // Cursor stack — last element is the current page's cursor (null = page 1)
-  const [cursorStack, setCursorStack] = useState([null]);
-  const [pageIndex, setPageIndex] = useState(1);
+  // React Query: fetch all rows once per session per user; staleTime=Infinity prevents re-fetch on revisit
+  const { data, isLoading, isError, error, refetch } = useAllMasterData(user?.userId);
 
-  const currentCursor = cursorStack[cursorStack.length - 1];
-
-  // React Query: serves from 5-min cache on revisit, no Firestore reads
-  const { data, isLoading, isError, error, refetch } = useMasterData(currentCursor);
-
-  // To add inline editing: import useUpdateLedger and call:
-  // const { mutate: updateLedger } = useUpdateLedger(currentCursor);
-  // updateLedger({ ledger_id, payload: { nextCallDate, lastComments } })
-
-  const rows       = data?.rows    ?? [];
-  const columns    = data?.columns ?? [];
-  const nextCursor = data?.nextCursor ?? null;
+  const rows = data?.rows ?? [];
+  const columns = data?.columns ?? [];
 
   // Define default visible columns
   const defaultVisibleColumns = useMemo(() =>
     ['ledger', 'city', 'address1', 'address2', 'address3', 'pin', 'email', 'contact', 'phone1', 'phone2', 'mobile', 'tin'],
     []
   );
-
-  const goNext = () => {
-    if (nextCursor == null) return;
-    setCursorStack(prev => [...prev, nextCursor]);
-    setPageIndex(p => p + 1);
-    setSearchQuery('');
-  };
-
-  const goPrev = () => {
-    if (cursorStack.length <= 1) return;
-    setCursorStack(prev => prev.slice(0, -1));
-    setPageIndex(p => p - 1);
-    setSearchQuery('');
-  };
 
   // Map each exact column key to its desired width and alignment
   const columnConfig = useMemo(() => ({
@@ -107,7 +101,7 @@ export default function ViewDataPage() {
         const config = columnConfig[key] || {};
         return {
           key,
-          label: key,
+          label: COLUMN_LABELS[key] ?? key,
           align: config.align || 'center',
           width: config.width || '200px',
           render: (item) => formatCell(item[key]),
@@ -128,7 +122,7 @@ export default function ViewDataPage() {
     [tableColumns]
   );
 
-  // In-page search — filters within the 15 loaded rows only
+  // In-page search — filters within loaded rows
   const filteredRows = useMemo(() => {
     if (!searchQuery.trim()) return rows;
     const q = searchQuery.trim().toLowerCase();
@@ -139,6 +133,35 @@ export default function ViewDataPage() {
       })
     );
   }, [rows, columns, searchQuery]);
+
+  const handleRowClick = useCallback(async (row) => {
+    if (!row.ledger_id || checkingRow) return;
+
+    // City authorization check (admins bypass)
+    if (!isAdmin) {
+      const userCity = user?.city?.trim().toLowerCase();
+      const rowCity = row?.city?.trim().toLowerCase();
+      if (userCity && rowCity && userCity !== rowCity) {
+        setRowAlert({ type: 'error', title: 'Not Authorized', message: 'Not authorized for your city' });
+        return;
+      }
+    }
+
+    setCheckingRow(true);
+    try {
+      const res = await apiFetch(`/api/ledger-remainder/${encodeURIComponent(row.ledger_id)}`);
+      if (res.ok) {
+        const data = await res.json();
+        navigate('/view-notify-detail', { state: { row: data.row } });
+      } else {
+        setRowAlert({ type: 'error', title: 'Not Found', message: `No outstanding record found for "${row.ledger || row.ledger_id}".` });
+      }
+    } catch {
+      setRowAlert({ type: 'error', title: 'Error', message: 'Failed to check outstanding record.' });
+    } finally {
+      setCheckingRow(false);
+    }
+  }, [checkingRow, isAdmin, navigate, user?.city]);
 
   const showTable = !isLoading && !isError && columns.length > 0;
 
@@ -159,14 +182,15 @@ export default function ViewDataPage() {
           title="Load Failed"
           message={error?.message || 'Failed to load master data'}
           onConfirm={() => refetch()}
-          onCancel={() => {}}
+          onCancel={() => { }}
         />
       )}
 
       {showTable && (
         <div className="view-master-table-section">
           <div className="view-master-toolbar">
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1 }}>
+            <h1 className="view-master-title">Master Data :</h1>
+            <div className="view-master-toolbar-search-group">
               <SearchBar
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -203,16 +227,20 @@ export default function ViewDataPage() {
               headerGradient
               defaultAlign="center"
               noDataMessage="No records in Excel_master yet. Upload a file from Excel."
+              onRowClick={handleRowClick}
             />
           </div>
-          <Pagination
-            currentPage={pageIndex}
-            hasPrev={cursorStack.length > 0}
-            hasNext={nextCursor != null}
-            onPrev={goPrev}
-            onNext={goNext}
-          />
         </div>
+      )}
+
+      {rowAlert && (
+        <Alert
+          type={rowAlert.type}
+          title={rowAlert.title}
+          message={rowAlert.message}
+          onConfirm={() => setRowAlert(null)}
+          onCancel={() => setRowAlert(null)}
+        />
       )}
     </div>
   );

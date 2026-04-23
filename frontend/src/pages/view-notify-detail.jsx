@@ -323,6 +323,16 @@ export default function NotifyDetailPage() {
         />
       )}
 
+      {alert && (
+        <Alert
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+          onConfirm={() => setAlert(null)}
+          onCancel={() => setAlert(null)}
+        />
+      )}
+
       <div className="ledger-card">
         {/* Header */}
         <div className="ledger-header-wrapper">
@@ -331,6 +341,9 @@ export default function NotifyDetailPage() {
             <h2>{ledgerData ? ledgerData.ledger_name : 'No ledger selected'}</h2>
             {ledgerData?.group && (
               <span className="ledger-group-badge">{ledgerData.group}</span>
+            )}
+            {ledgerData?.category != null && (
+              <span className="ledger-category-badge">Cat: {ledgerData.category}</span>
             )}
           </div>
 
@@ -359,16 +372,6 @@ export default function NotifyDetailPage() {
 
           <BackButton onClick={() => navigate(-1)} title="Go Back" size="medium" showLabel={true} />
         </div>
-
-        {alert && (
-          <Alert
-            type={alert.type}
-            title={alert.title}
-            message={alert.message}
-            onConfirm={() => setAlert(null)}
-            onCancel={() => setAlert(null)}
-          />
-        )}
 
         {ledgerData && (<>
           {/* ── Outstanding Details: compact horizontal row ── */}
@@ -425,7 +428,13 @@ export default function NotifyDetailPage() {
                   </div>
                   <div className="date-edit-controls">
                     <div className="interaction-datepicker-wrapper">
-                      <DatePicker value={editableDate} onChange={setEditableDate} flow="currentMonth" />
+                      <DatePicker
+                        value={editableDate}
+                        onChange={setEditableDate}
+                        flow="currentMonth"
+                        minDate={(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })()}
+                        maxDate={(() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 10); return d; })()}
+                      />
                     </div>
                     <button
                       className="date-action-btn date-action-btn--save"
@@ -728,7 +737,7 @@ export default function NotifyDetailPage() {
             <>
               {ledgerData && additionalCustomers.length < 3 && (
                 <div className="customer-details-row">
-                  <div className="detail-card add-customer-card" onClick={handleAddCustomer} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div className="detail-card add-customer-card" onClick={handleAddCustomer}>
                     <AddCustomerButton onClick={handleAddCustomer} disabled={isLoading} title="Add another customer" />
                   </div>
                 </div>

@@ -32,13 +32,9 @@ function formatRequestDate(iso) {
   }
 }
 
-function initials(first, last) {
-  const a = (first || '').trim().charAt(0);
-  const b = (last || '').trim().charAt(0);
-  return (a + b).toUpperCase() || '?';
-}
 
 function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adminData, setAdminData, activeAdminList, setActiveAdminList }) {
+  const { user: currentUser } = useAuth();
   const [data, setData] = useState(adminData);
   const [loading, setLoading] = useState(!adminData);
   const [error, setError] = useState(null);
@@ -397,8 +393,8 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
                                     type="button"
                                     className="ad__act-btn ad__act-btn--edit"
                                     onClick={() => startEdit(row)}
-                                    disabled={!!alertState || !!editingRow}
-                                    title="Edit city & phone"
+                                    disabled={!!alertState || !!editingRow || row.role === 'admin'}
+                                    title={row.role === 'admin' ? 'Admin users cannot be edited' : 'Edit city & phone'}
                                   >
                                     <Pencil size={16} />
                                   </button>
@@ -406,8 +402,8 @@ function AdminDashboard({ isEmployeeCardExpanded, setIsEmployeeCardExpanded, adm
                                     type="button"
                                     className="ad__act-btn ad__act-btn--delete"
                                     onClick={() => promptDeleteUser(row.empId, [row.firstName, row.lastName].filter(Boolean).join(' '))}
-                                    disabled={!!alertState || !!editingRow || row.role === 'admin'}
-                                    title={row.role === 'admin' ? 'Admin users cannot be deleted' : undefined}
+                                    disabled={!!alertState || !!editingRow || row.role === 'admin' || row.empId === currentUser?.empId}
+                                    title={row.role === 'admin' ? 'Admin users cannot be deleted' : row.empId === currentUser?.empId ? 'Cannot delete your own account' : undefined}
                                   >
                                     <Trash2 size={20} />
                                   </button>
@@ -490,7 +486,9 @@ export default function HomePage() {
   const [counterStats, setCounterStats] = useState(null);
   const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const [activeAdminList, setActiveAdminList] = useState('employees');
-  const [initialLoading, setInitialLoading] = useState(isAdmin);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [adminReady, setAdminReady] = useState(!isAdmin); // employees skip admin fetch
+  const [statsReady, setStatsReady] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
 
   const handleBellClick = useCallback(() => {
@@ -511,6 +509,8 @@ export default function HomePage() {
         if (res.ok) setCounterStats(json.stats);
       } catch (e) {
         console.error('Failed to load counter stats:', e);
+      } finally {
+        setStatsReady(true);
       }
     };
     loadCounterStats();
@@ -529,14 +529,17 @@ export default function HomePage() {
         } catch (e) {
           console.error('Failed to load admin data:', e);
         } finally {
-          setInitialLoading(false);
+          setAdminReady(true);
         }
       };
       loadAdminData();
-    } else {
-      setInitialLoading(false);
     }
   }, [isAdmin]);
+
+  // Dismiss loader only after BOTH data sources have settled
+  useEffect(() => {
+    if (adminReady && statsReady) setInitialLoading(false);
+  }, [adminReady, statsReady]);
 
   return (
     <div className="hp">
@@ -641,7 +644,7 @@ function UserGreetingBanner({ user, stats, onEmployeeCardClick, isEmployeeCardEx
 
           {isAdmin ? (
             <div
-              className={`ub__card ub__card--manage ${isEmployeeCardExpanded ? 'ub__card--manage-active' : ''}`}
+              className="ub__card ub__card--manage"
               onClick={onEmployeeCardClick}
               role="button"
               tabIndex={0}
