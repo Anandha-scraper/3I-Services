@@ -120,13 +120,6 @@ class ExcelMasterService {
     return rows;
   }
 
-  /**
-   * Cursor-based paginated list — always reads exactly 15 documents.
-   * Pass opts.after = sequence_id of the last visible row to advance the cursor.
-   *
-   * @param {{ after?: number }} opts
-   * @returns {{ rows: object[], nextCursor: number|null }}
-   */
   async listPaged(opts = {}) {
     let query = this.collection.orderBy('ledger_id', 'desc  ');
     if (opts.after != null) {

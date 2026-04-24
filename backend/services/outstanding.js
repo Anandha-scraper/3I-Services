@@ -242,12 +242,20 @@ class OutstandingService {
         const previousDebit = ledgerData.debit || 0;
         const previousCredit = ledgerData.credit || 0;
         const previousDate = ledgerData.lastTransactionDate || '';
-        const previousComments = ledgerData.lastComments || '';
+        const normalizeComments = (val) => {
+          if (!val) return '';
+          if (Array.isArray(val)) return val.map(c => c.text || '').filter(Boolean).join(', ');
+          return String(val);
+        };
+        const previousComments = normalizeComments(ledgerData.lastComments);
         const previousCategory = ledgerData.category ?? null;
 
         // categoryWillChange is true only when Excel has a valid 1–6 value
         // that differs from what is already stored in the DB.
         const categoryWillChange = newCategory !== null && newCategory !== previousCategory;
+
+        // blank Excel comment means "preserve existing" — mirrors the update logic below
+        const commentsWillChange = newComments !== '' && newComments !== previousComments;
 
         // ── 2d-i. DEDUPLICATION SKIP ─────────────────────────────────────
         // If debit, credit, date, comments AND category are all unchanged, skip
@@ -256,7 +264,7 @@ class OutstandingService {
           previousDebit === newDebit &&
           previousCredit === newCredit &&
           previousDate === (parsedDate || '') &&
-          previousComments === newComments &&
+          !commentsWillChange &&
           !categoryWillChange
         ) {
            results.found.push({
@@ -316,7 +324,7 @@ class OutstandingService {
           lcredit: newCredit,
           nextCallDate: ledgerData.nextCallDate || '',
           date: parsedDate || String(record.date || '').trim(),
-          comments: newComments || ledgerData.lastComments || '',
+          comments: newComments || normalizeComments(ledgerData.lastComments),
           // Label as 'insert' when the record had zero balances before (first meaningful entry)
           operation: (previousDebit === 0 && previousCredit === 0) ? 'insert' : 'update',
           updatedFields: changedFields,
