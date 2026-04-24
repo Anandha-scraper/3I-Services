@@ -242,12 +242,20 @@ class OutstandingService {
         const previousDebit = ledgerData.debit || 0;
         const previousCredit = ledgerData.credit || 0;
         const previousDate = ledgerData.lastTransactionDate || '';
-        const previousComments = ledgerData.lastComments || '';
+        const normalizeComments = (val) => {
+          if (!val) return '';
+          if (Array.isArray(val)) return val.map(c => c.text || '').filter(Boolean).join(', ');
+          return String(val);
+        };
+        const previousComments = normalizeComments(ledgerData.lastComments);
         const previousCategory = ledgerData.category ?? null;
 
         // categoryWillChange is true only when Excel has a valid 1–6 value
         // that differs from what is already stored in the DB.
         const categoryWillChange = newCategory !== null && newCategory !== previousCategory;
+
+        // blank Excel comment means "preserve existing" — mirrors the update logic below
+        const commentsWillChange = newComments !== '' && newComments !== previousComments;
 
         // ── 2d-i. DEDUPLICATION SKIP ─────────────────────────────────────
         // If debit, credit, date, comments AND category are all unchanged, skip
@@ -256,7 +264,7 @@ class OutstandingService {
           previousDebit === newDebit &&
           previousCredit === newCredit &&
           previousDate === (parsedDate || '') &&
-          previousComments === newComments &&
+          !commentsWillChange &&
           !categoryWillChange
         ) {
            results.found.push({
@@ -284,8 +292,10 @@ class OutstandingService {
           updateData.lastTransactionDate = parsedDate;
         }
 
-        // Always overwrite comments (empty string is a valid clear-down)
-        updateData.lastComments = newComments;
+        // Only overwrite comments when Excel cell had content; blank preserves existing manual comments
+        if (newComments !== '') {
+          updateData.lastComments = newComments;
+        }
 
         // CATEGORY update rules:
         //  • blank cell  → newCategory=null → field NOT added → DB value preserved
@@ -302,7 +312,8 @@ class OutstandingService {
         const changedFields = [];
         if (newDebit !== previousDebit) changedFields.push('ldebit');
         if (newCredit !== previousCredit) changedFields.push('lcredit');
-        if (newComments !== previousComments) changedFields.push('comments');
+        if (newComments !== '' && newComments !== previousComments) changedFields.push('comments');
+        if (categoryWillChange) changedFields.push('category');
 
         logsToCreate.push({
           ledger_id: ledgerId,
@@ -311,9 +322,9 @@ class OutstandingService {
           category: newCategory ?? ledgerData.category,
           ldebit: newDebit,
           lcredit: newCredit,
-          nextCallDate: '',
+          nextCallDate: ledgerData.nextCallDate || '',
           date: parsedDate || String(record.date || '').trim(),
-          comments: newComments,
+          comments: newComments || normalizeComments(ledgerData.lastComments),
           // Label as 'insert' when the record had zero balances before (first meaningful entry)
           operation: (previousDebit === 0 && previousCredit === 0) ? 'insert' : 'update',
           updatedFields: changedFields,
