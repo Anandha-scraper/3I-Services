@@ -67,6 +67,7 @@ env:
 
   - variable: EMAIL_USER
     secret: projects/693049807057/secrets/EMAIL_USER/versions/1
+    
 
   - variable: EMAIL_PASSWORD
     secret: projects/693049807057/secrets/EMAIL_PASSWORD/versions/1
