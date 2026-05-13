@@ -49,7 +49,7 @@ env:
   # UPDATE after first deploy — your main backend URLthreei-services-crm
   - variable: CORS_ORIGIN
     availability: [RUNTIME]
-    value: "crm.3iservices.com,threeiservices-crm-prd--threei-services-crm.asia-southeast1.hosted.app"
+    value: "crm.3iservices.com"
 
   #declare of database use for production or development
   - variable: FIRESTORE_DB_ID
@@ -66,7 +66,7 @@ env:
     secret: projects/693049807057/secrets/JWT_SECRET
 
   - variable: EMAIL_USER
-    secret: projects/693049807057/secrets/EMAIL_USER/versions/1
+    secret: projects/693049807057/secrets/EMAIL_USER
 
   - variable: EMAIL_PASSWORD
-    secret: projects/693049807057/secrets/EMAIL_PASSWORD/versions/1
+    secret: projects/693049807057/secrets/EMAIL_PASSWORD
