@@ -67,6 +67,12 @@ app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ message: 'API endpoint not found' });
   }
+  // Don't serve index.html for asset file requests — return 404 instead.
+  // This prevents MIME type errors caused by missing build assets.
+  const assetExtensions = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map|json)$/i;
+  if (assetExtensions.test(req.path)) {
+    return res.status(404).send('Asset not found');
+  }
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
